@@ -1,0 +1,42 @@
+h1 {
+  font-family: monospace;
+  text-align: center;
+  animation: colorChange 1s infinite;
+}
+
+@keyframes colorChange {
+  0% { color: red; }
+  50% { color: blue; }
+  100% { color: red; }
+}
+
+.container {
+    padding: 1em;
+    margin: 1em auto;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+
+    background: linear-gradient(318deg, #f9c69c, #a5bfff);
+    background-size: 400% 400%;
+
+    -webkit-animation: bgAnimation 7s ease infinite;
+    -moz-animation: bgAnimation 7s ease infinite;
+    animation: bgAnimation 7s ease infinite;
+}
+
+@-webkit-keyframes bgAnimation {
+    0%{background-position:0% 83%}
+    50%{background-position:100% 18%}
+    100%{background-position:0% 83%}
+}
+@-moz-keyframes bgAnimation {
+    0%{background-position:0% 83%}
+    50%{background-position:100% 18%}
+    100%{background-position:0% 83%}
+}
+@keyframes bgAnimation {
+    0%{background-position:0% 83%}
+    50%{background-position:100% 18%}
+    100%{background-position:0% 83%}
+}

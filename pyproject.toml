@@ -1,0 +1,55 @@
+[build-system]
+requires = ['setuptools']
+build-backend = 'setuptools.build_meta'
+
+[project]
+name = 'dsw-seed-maker'
+version = '0.1.0'
+description = 'Maker for DSW data seeds (reproducible content packages)'
+readme = 'README.md'
+keywords = ['dsw', 'seed', 'data', 'reproducibility', 'SQL', 'S3']
+license = { file = 'LICENSE' }
+authors = [
+    { name = 'Marek Suchánek', email = 'marek.suchanek@ds-wizard.org' },
+    { name = 'Jana Martínková', email = 'jana.martinkova@ds-wizard.org' },
+    { name = 'Kryštof Komanec', email = 'krystof.komanec@ds-wizard.org' },
+]
+classifiers = [
+    'Development Status :: 4 - Beta',
+    'License :: OSI Approved :: Apache Software License',
+    'Programming Language :: Python',
+    'Programming Language :: Python :: 3.12',
+    'Topic :: Text Processing',
+    'Topic :: Utilities',
+]
+requires-python = '>=3.11, <4'
+dependencies = [
+    'click',
+    'fastapi',
+    'jinja2',
+    'minio',
+    'psycopg[binary]',
+    'python-dotenv',
+    'tenacity',
+    'uvicorn',
+]
+
+[project.urls]
+Homepage = 'https://ds-wizard.org'
+Repository = 'https://github.com/ds-wizard/dsw-seed-maker'
+
+[project.scripts]
+dsw-seed-maker = 'dsw_seed_maker:cli'
+
+[tool.setuptools]
+zip-safe = false
+
+[tool.setuptools.packages.find]
+namespaces = true
+where = ['src']
+
+[tool.setuptools.package-data]
+'*' = ['*.css', '*.js', '*.j2']
+
+[tool.distutils.bdist_wheel]
+universal = true

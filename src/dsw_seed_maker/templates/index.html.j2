@@ -1,0 +1,25 @@
+{% extends 'layout.html.j2' %}
+
+{% block title %}DSW Seed Maker{% endblock %}
+
+{% block content %}
+    <h1>DSW Seed Maker</h1>
+
+    <p>There should be some shiny simple frontend created with Jinja, Bootstrap, and jQuery (+AJAX)...</p>
+
+    <hr>
+
+    <div class="form-group">
+        <label for="input-example">Magic code</label>
+        <input type="text" class="form-control" id="input-example" placeholder="Enter magic code here...">
+        <small id="seedHelp" class="form-text text-muted">This should be <strong>example</strong> but try other as well.</small>
+    </div>
+
+    <hr>
+
+    <button id="btn-example" class="btn btn-primary btn-lg">Example</button>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+{% endblock %}
