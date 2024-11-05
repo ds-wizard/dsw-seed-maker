@@ -5,6 +5,7 @@ import click
 
 from .config import Config
 from .consts import DEFAULT_ENCODING, PACKAGE_VERSION
+from .logic import list_resources_users_logic
 
 
 class AliasedGroup(click.Group):
@@ -49,10 +50,11 @@ def example():
 @click.option('-o', '--output',
               type=click.File('w', encoding=DEFAULT_ENCODING), default='-',
               help='Output file to write to (JSON)')
-def list_resources(output_fp):
+def list_resources(output):
     Config.check()
     # TODO: Implement list command (do it in logic, import & use here)
-    output_fp.write(json.dumps({'resources': []}))
+    resources = list_resources_users_logic()
+    output.write(json.dumps({'resources': resources}))
 
 
 @cli.command(help='Create a seed package from input', name='make-seed')
