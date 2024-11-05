@@ -57,7 +57,7 @@ general:
 
 # (!!) Change default password
 database:
-  connectionString: postgresql://postgres:postgres@postgres:15432/wizard
+  connectionString: postgresql://postgres:postgres@postgres:5432/wizard
 
 # (!!) Change default password
 s3:
