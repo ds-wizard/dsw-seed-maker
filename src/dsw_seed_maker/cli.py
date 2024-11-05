@@ -54,7 +54,8 @@ def list_resources(output):
     Config.check()
     # TODO: Implement list command (do it in logic, import & use here)
     resources = list_resources_users_logic()
-    output.write(json.dumps({'resources': resources}))
+    json_output = json.dumps({'resources': resources}, indent=4)
+    output.write(json_output)
 
 
 @cli.command(help='Create a seed package from input', name='make-seed')

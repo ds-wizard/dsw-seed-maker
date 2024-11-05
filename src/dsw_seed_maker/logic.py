@@ -1,8 +1,7 @@
 from .models import ExampleRequestDTO, ExampleResponseDTO
 from .comm.db import Database, DatabaseConnection
 from psycopg import sql
-from .models import UserDTO
-from typing import List
+from typing import List, Dict, Any
 import json
 
 def example_logic(req_dto: ExampleRequestDTO) -> ExampleResponseDTO:
@@ -10,18 +9,19 @@ def example_logic(req_dto: ExampleRequestDTO) -> ExampleResponseDTO:
         message=req_dto.message.replace('server', 'client'),
     )
 
-def list_resources_users_logic() -> List[UserDTO]:
+def list_resources_users_logic() -> list[dict[str, Any]]:
     db = Database(name='postgres', dsn='postgresql://postgres:postgres@localhost:15432/wizard')
     query = sql.SQL('SELECT * FROM user_entity')
     users_resources = db.execute_query(query)
     # Parse the dictionaries into UserDTO instances
-    users = []
-    for row in users_resources:
-        user_dto = UserDTO(
-            uuid=row.get('uuid'),
-            first_name=row.get('firstName', ''),
-            last_name=row.get('lastName', '')
-        )
-        users.append(user_dto.dict())  # Pydantic handles UUID serialization here
+    parsed_resources = [
+        {
+            'uuid': str(row['uuid']),  # Convert UUID to string
+            'first_name': row['first_name'],
+            'last_name': row['last_name'],
+            'role': row['role']
+        }
+        for row in users_resources
+    ]
 
-    return users
+    return parsed_resources
