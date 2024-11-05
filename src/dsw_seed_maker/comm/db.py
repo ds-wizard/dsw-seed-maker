@@ -45,6 +45,7 @@ class Database:
     def execute_query(self, query: psycopg.connection.Query, **kwargs):
         with self._db.new_cursor(use_dict=True) as cursor:
             cursor.execute(query=query, params=kwargs)
+            return cursor.fetchall()
 
 
 class DatabaseConnection:
