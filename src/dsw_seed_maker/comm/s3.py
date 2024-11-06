@@ -104,3 +104,7 @@ class S3Storage:
                 content_type=content_type,
                 metadata=metadata,
             )
+
+    @property
+    def bucket(self):
+        return self._bucket

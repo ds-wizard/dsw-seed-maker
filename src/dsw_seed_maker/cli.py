@@ -5,7 +5,7 @@ import click
 
 from .config import Config
 from .consts import DEFAULT_ENCODING, PACKAGE_VERSION
-from .logic import list_logic
+from .logic import list_logic  #,download_file_logic
 
 
 class AliasedGroup(click.Group):
@@ -51,16 +51,26 @@ def example():
               type=click.File('w', encoding=DEFAULT_ENCODING), default='-',
               help='Output file to write to (JSON)')
 @click.option('-t', '--resource_type',
-              type=click.Choice(['all', 'users', 'projects_importers',
-                                 'knowledge_models', 'locale']), default='all',
+              type=click.Choice(['all', 'users', 'project_importers',
+                                 'knowledge_models', 'locales',
+                                 'document_templates', 'projects', 'documents']), default='all',
               help='Specify the type of resource to list '
-                   '(all, users, projects_importers, knowledge_models or locale)')
+                   '(all, users, projects_importers, knowledge_models,'
+                   ' locales, document_templates, projects, documents)')
 def list_resources(output, resource_type):
     Config.check()
     # TODO: Implement list command (do it in logic, import & use here)
     resources = list_logic(resource_type)
     json_output = json.dumps({'resources': resources}, indent=4)
     output.write(json_output)
+    
+
+# just for testing the download
+# @cli.command(help='List all available seed resources', name='download')
+# def download_resources():
+#    Config.check()
+#    # TODO: Implement list command (do it in logic, import & use here)
+#    download_file_logic("documents/1034a4b0-d867-4b4b-b2a0-a3956b43cf95", "test.pdf")
 
 
 @cli.command(help='Create a seed package from input', name='make-seed')
