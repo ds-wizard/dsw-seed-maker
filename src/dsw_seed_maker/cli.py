@@ -56,8 +56,8 @@ def example():
 def list_resources(output, resource_type):
     Config.check()
     # TODO: Implement list command (do it in logic, import & use here)
-    resources=list_logic(resource_type)
-    json_output=json.dumps({'resources': resources}, indent = 4)
+    resources = list_logic(resource_type)
+    json_output = json.dumps({'resources':resources}, indent=4)
     output.write(json_output)
 
 

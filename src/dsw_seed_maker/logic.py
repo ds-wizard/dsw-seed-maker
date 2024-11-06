@@ -29,7 +29,7 @@ def list_logic(resource_type: str) -> dict[str, list[dict[str, Any]]] | list[dic
 
 
 def list_all_logic(db) -> dict[str, list[dict[str, str | Any]] | list[dict[str, Any]]]:
-    users= list_users_logic(db)
+    users = list_users_logic(db)
     projects_importers = list_projects_importers_logic(db)
     knowledge_models = list_knowledge_models_logic(db)
     locale = list_locales_logic(db)
