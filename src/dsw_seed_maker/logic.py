@@ -185,3 +185,93 @@ def download_file_logic(file_name: str, target_path: str) -> bool:
         print(f"File '{file_name}' not found in bucket '{s3.bucket}'.")
 
     return downloaded_file
+
+def process_input(data, output_dir):
+    db = connect_to_db_logic()
+    for resource_type, items in data.items():
+        handler = resource_handlers.get(resource_type)
+        file = create_seed_files_db(resource_type, output_dir)
+        if handler:
+            # Call the handler for each item in the list associated with this resource type
+            for item in items:
+                handler(item, db, file)
+        else:
+            print(f"Unrecognized resource type: {resource_type}")
+
+def create_seed_files_db(resource_type, output_dir):
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    file_path = os.path.join(output_dir, f"add_{resource_type}.sql")
+    file = open(file_path, 'w')
+    return file
+
+def write_seed_files_db(file, resource_type, resource):
+    data = "INSERT INTO {table} VALUES {values};".format(table=resource_tables[resource_type], values=resource)
+    file.write(data + "\n")
+
+# Define generic handler functions for each resource type
+def handle_user(data, db, file):
+    print(f"Processing user: {data['uuid']} - {data['first_name']} {data['last_name']} ({data['role']})")
+    # Use a parameterized query for better syntax and security
+    query = "SELECT * FROM user_entity WHERE uuid = '{uuid}'".format(uuid=data['uuid'])
+    resource = db.execute_query(query)
+    #check for only one resource otherwise print error
+    if len(resource) == 1:
+        print("This is what i got from db:")
+        print(resource)
+        write_seed_files_db(file, "users", resource[0])
+    else:
+        print("User  not found in database")
+
+
+def handle_project(data, db, file):
+    print(f"Processing project: {data['uuid']} - {data['name']}")
+    # Add specific logic for handling a project here
+
+
+def handle_document(data, db, file):
+    print(f"Processing document: {data['uuid']} - {data['name']}")
+    # Add specific logic for handling a document here
+
+
+def handle_project_importer(data, db, file):
+    print(f"Processing project importer: {data['id']} - {data['name']}")
+    # Add specific logic for handling a project importer here
+
+
+def handle_knowledge_model(data, db, file):
+    print(f"Processing knowledge model: {data['id']} - {data['name']}")
+    # Add specific logic for handling a knowledge model here
+
+
+def handle_locale(data, db, file):
+    print(f"Processing locale: {data['id']} - {data['name']} ({data['code']})")
+    # Add specific logic for handling a locale here
+
+
+def handle_document_template(data, db, file):
+    print(f"Processing document template: {data['id']} - {data['name']}")
+    # Add specific logic for handling a document template here
+
+# Map resource types to handler functions
+resource_handlers = {
+    "users": handle_user,
+    "projects": handle_project,
+    "documents": handle_document,
+    "project_importers": handle_project_importer,
+    "knowledge_models": handle_knowledge_model,
+    "locales": handle_locale,
+    "document_templates": handle_document_template,
+}
+
+# Map resources to their table names
+resource_tables = {
+    "users": "user_entity",
+    "projects": "questionnaire",
+    "documents": "document",
+    "project_importers": "questionnaire_importer",
+    "knowledge_models": "package",
+    "locales": "locale",
+    "document_templates": "document_template",
+}
