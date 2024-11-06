@@ -10,8 +10,9 @@ import fastapi.templating
 
 from .config import Config
 from .consts import NICE_NAME, VERSION
-from .models import ExampleRequestDTO, ExampleResponseDTO, UserDTO  # Make sure UserDTO is defined in your models
-from .logic import example_logic, list_resources_users_logic  # Import the new logic function
+from .models import ExampleRequestDTO, ExampleResponseDTO, UserDTO
+from .logic import example_logic, list_resources_users_logic
+
 
 LOG = logging.getLogger('uvicorn.error')
 ROOT = pathlib.Path(__file__).parent
@@ -33,6 +34,7 @@ app = fastapi.FastAPI(
     lifespan=lifespan,
     root_path=Config.API_ROOT_PATH,
 )
+
 
 app.mount('/static', fastapi.staticfiles.StaticFiles(directory=STATIC_DIR), name='static')
 templates = fastapi.templating.Jinja2Templates(directory=TEMPLATES_DIR)

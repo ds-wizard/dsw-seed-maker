@@ -10,11 +10,10 @@ class ExampleResponseDTO(pydantic.BaseModel):
 
 
 class UserDTO(pydantic.BaseModel):
-    uuid: str  # UUID as a string
+    uuid: str
     first_name: str
     last_name: str
     role: str
 
     class Config:
-        # Allows us to use camelCase when sending data to the client
         allow_population_by_field_name = True
