@@ -5,7 +5,7 @@ import click
 
 from .config import Config
 from .consts import DEFAULT_ENCODING, PACKAGE_VERSION
-from .logic import list_resources_users_logic
+from .logic import list_logic
 
 
 class AliasedGroup(click.Group):
@@ -50,10 +50,16 @@ def example():
 @click.option('-o', '--output',
               type=click.File('w', encoding=DEFAULT_ENCODING), default='-',
               help='Output file to write to (JSON)')
-def list_resources(output):
+
+@click.option('-t', '--resource_type',
+              type=click.Choice(['all', 'users', 'projects_importers',
+                                 'knowledge_models', 'locale']), default='all',
+              help='Specify the type of resource to list '
+                   '(all, users, projects_importers, knowledge_models or locale)')
+def list_resources(output, resource_type):
     Config.check()
     # TODO: Implement list command (do it in logic, import & use here)
-    resources = list_resources_users_logic()
+    resources = list_logic(resource_type)
     json_output = json.dumps({'resources': resources}, indent=4)
     output.write(json_output)
 
