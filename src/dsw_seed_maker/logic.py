@@ -22,15 +22,19 @@ def list_logic(resource_type: str) -> dict[str, list[dict[str, Any]]] | list[dic
         return {'projects_importers' : list_projects_importers_logic(db)}
     elif resource_type == 'knowledge_models':
         return {'knowledge_models' : list_knowledge_models_logic(db)}
+    elif resource_type == 'locale':
+        return {'locale' : list_locales_logic(db)}
 
 def list_all_logic(db) -> dict[str, list[dict[str, str | Any]] | list[dict[str, Any]]]:
     users= list_users_logic(db)
     projects_importers = list_projects_importers_logic(db)
     knowledge_models = list_knowledge_models_logic(db)
+    locale = list_locales_logic(db)
     resources = {
         'users': users,
         'projects_importers': projects_importers,
-        'knowledge_models': knowledge_models
+        'knowledge_models': knowledge_models,
+        'locale': locale
     }
     return resources
 
@@ -72,6 +76,21 @@ def list_knowledge_models_logic(db) -> list[dict[str, Any]]:
             'id': row['id'],  # Convert UUID to string
             'name': row['name'],
             'km_id': row['km_id'],
+            'description': row['description']
+        }
+        for row in resources
+    ]
+    return parsed_resources
+
+def list_locales_logic(db) -> list[dict[str, Any]]:
+    query = sql.SQL('SELECT * FROM locale')
+    resources = db.execute_query(query)
+    # Parse the dictionaries into UserDTO instances
+    parsed_resources = [
+        {
+            'id': row['id'],  # Convert UUID to string
+            'name': row['name'],
+            'code': row['code'],
             'description': row['description']
         }
         for row in resources
