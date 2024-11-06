@@ -9,17 +9,17 @@
         <hr>
 
         <div class="form-group">
-            <label for="input-example">Search for resources:</label>
+            <label for="input-search">Search for resources:</label>
 
             <div class="d-flex">
-                <input type="text" class="form-control me-2" id="input-example" placeholder="Enter what you are looking for here...">
+                <input type="text" class="form-control me-2" id="input-search" placeholder="Enter what you are looking for here...">
                 <button id="btn-list" class="btn btn-primary">List</button>
             </div>
 
             <div id="seedHelp" class="form-text text-muted">
                 Following resources are available for seeding:
                 <ul>
-                    <li>all</li>
+                    <li>all_resources</li>
                     <li>users</li>
                     <li>project_importers</li>
                     <li>knowledge_models</li>
@@ -34,8 +34,8 @@
         <hr>
 
         <h3>Response:</h3>
-        <textarea id="response-output" class="form-control" rows="10" readonly></textarea>
-        <button id="copy-btn" class="btn btn-secondary mt-2">Copy to Clipboard</button>
+        <textarea id="output-search" class="form-control" rows="10" readonly></textarea>
+        <button id="btn-copy" class="btn btn-secondary mt-2">Copy to Clipboard</button>
     </div>
 {% endblock %}
 
