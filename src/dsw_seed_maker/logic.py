@@ -38,11 +38,11 @@ def list_logic(resource_type: str) -> dict[str, list[dict[str, Any]]] | list[dic
         return list_all_logic(db)
     if resource_type == 'users':
         return {'users': list_users_logic(db)}
-    if resource_type == 'projects_importers':
-        return {'projects_importers': list_projects_importers_logic(db)}
+    if resource_type == 'project_importers':
+        return {'projects_importers': list_project_importers_logic(db)}
     if resource_type == 'knowledge_models':
         return {'knowledge_models': list_knowledge_models_logic(db)}
-    if resource_type == 'locale':
+    if resource_type == 'locales':
         return {'locales': list_locales_logic(db)}
     if resource_type == 'document_templates':
         return {'document_templates': list_document_templates_logic(db)}
@@ -56,7 +56,7 @@ def list_logic(resource_type: str) -> dict[str, list[dict[str, Any]]] | list[dic
 
 def list_all_logic(db) -> dict[str, list[dict[str, str | Any]] | list[dict[str, Any]]]:
     users = list_users_logic(db)
-    projects_importers = list_projects_importers_logic(db)
+    projects_importers = list_project_importers_logic(db)
     knowledge_models = list_knowledge_models_logic(db)
     locales = list_locales_logic(db)
     document_templates = list_document_templates_logic(db)
@@ -64,7 +64,7 @@ def list_all_logic(db) -> dict[str, list[dict[str, str | Any]] | list[dict[str, 
     documents = list_documents_logic(db)
     resources = {
         'users': users,
-        'projects_importers': projects_importers,
+        'project_importers': projects_importers,
         'knowledge_models': knowledge_models,
         'locales': locales,
         'document_templates': document_templates,
@@ -89,7 +89,7 @@ def list_users_logic(db) -> list[dict[str, str | Any]]:
     return parsed_resources
 
 
-def list_projects_importers_logic(db) -> list[dict[str, Any]]:
+def list_project_importers_logic(db) -> list[dict[str, Any]]:
     query = sql.SQL('SELECT * FROM questionnaire_importer')
     resources = db.execute_query(query)
     parsed_resources: list[dict[str, Any]] = [
@@ -132,6 +132,7 @@ def list_locales_logic(db) -> list[dict[str, Any]]:
     ]
     return parsed_resources
 
+
 def list_document_templates_logic(db) -> list[dict[str, Any]]:
     query = sql.SQL('SELECT * FROM document_template')
     resources = db.execute_query(query)
@@ -145,6 +146,7 @@ def list_document_templates_logic(db) -> list[dict[str, Any]]:
     ]
     return parsed_resources
 
+
 def list_projects_logic(db) -> list[dict[str, Any]]:
     query = sql.SQL('SELECT * FROM questionnaire')
     resources = db.execute_query(query)
@@ -156,6 +158,7 @@ def list_projects_logic(db) -> list[dict[str, Any]]:
         for row in resources
     ]
     return parsed_resources
+
 
 def list_documents_logic(db) -> list[dict[str, Any]]:
     query = sql.SQL('SELECT * FROM document')
