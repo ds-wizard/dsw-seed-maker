@@ -1,7 +1,8 @@
+from typing import Any
+from psycopg import sql
+
 from .models import ExampleRequestDTO, ExampleResponseDTO
 from .comm.db import Database
-from psycopg import sql
-from typing import Any
 
 
 def example_logic(req_dto: ExampleRequestDTO) -> ExampleResponseDTO:
@@ -26,6 +27,8 @@ def list_logic(resource_type: str) -> dict[str, list[dict[str, Any]]] | list[dic
         return {'knowledge_models' : list_knowledge_models_logic(db)}
     elif resource_type == 'locale':
         return {'locale' : list_locales_logic(db)}
+    else:
+        raise ValueError(f'Invalid resource type: {resource_type}')
 
 
 def list_all_logic(db) -> dict[str, list[dict[str, str | Any]] | list[dict[str, Any]]]:
