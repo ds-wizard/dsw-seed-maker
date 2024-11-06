@@ -1,5 +1,5 @@
-from psycopg import sql
 from typing import Any
+from psycopg import sql
 
 from .models import ExampleRequestDTO, ExampleResponseDTO
 from .comm.db import Database
