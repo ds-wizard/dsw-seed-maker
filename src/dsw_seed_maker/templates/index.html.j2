@@ -3,21 +3,28 @@
 {% block title %}DSW Seed Maker{% endblock %}
 
 {% block content %}
-    <h1>DSW Seed Maker</h1>
+    <div class="container">
+        <h1>DSW Seed Maker</h1>
 
-    <p>There should be some shiny simple frontend created with Jinja, Bootstrap, and jQuery (+AJAX)...</p>
+        <p>There should be some shiny simple frontend created with Jinja, Bootstrap, and jQuery (+AJAX)...</p>
 
-    <hr>
+        <hr>
 
-    <div class="form-group">
-        <label for="input-example">Magic code</label>
-        <input type="text" class="form-control" id="input-example" placeholder="Enter magic code here...">
-        <small id="seedHelp" class="form-text text-muted">This should be <strong>example</strong> but try other as well.</small>
+        <div class="form-group">
+            <label for="input-example">Magic code</label>
+            <input type="text" class="form-control" id="input-example" placeholder="Enter magic code here...">
+            <small id="seedHelp" class="form-text text-muted">This should be <strong>example</strong> but try other as well.</small>
+        </div>
+
+        <hr>
+
+        <button id="btn-example" class="btn btn-primary btn-lg">Example</button>
+
+        <hr>
+
+        <h3>Response:</h3>
+        <pre id="response-output"></pre>
     </div>
-
-    <hr>
-
-    <button id="btn-example" class="btn btn-primary btn-lg">Example</button>
 {% endblock %}
 
 {% block scripts %}
