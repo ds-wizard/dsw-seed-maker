@@ -4,26 +4,38 @@
 
 {% block content %}
     <div class="container">
-        <h1>DSW Seed Maker</h1>
-
-        <p>There should be some shiny simple frontend created with Jinja, Bootstrap, and jQuery (+AJAX)...</p>
+        <h1>Welcome to DSW Seed Maker</h1>
 
         <hr>
 
         <div class="form-group">
-            <label for="input-example">Magic code</label>
-            <input type="text" class="form-control" id="input-example" placeholder="Enter magic code here...">
-            <small id="seedHelp" class="form-text text-muted">This should be <strong>example</strong> but try other as well.</small>
+            <label for="input-example">Search for resources:</label>
+
+            <div class="d-flex">
+                <input type="text" class="form-control me-2" id="input-example" placeholder="Enter what you are looking for here...">
+                <button id="btn-list" class="btn btn-primary">List</button>
+            </div>
+
+            <div id="seedHelp" class="form-text text-muted">
+                Following resources are available for seeding:
+                <ul>
+                    <li>all</li>
+                    <li>users</li>
+                    <li>project_importers</li>
+                    <li>knowledge_models</li>
+                    <li>locales</li>
+                    <li>document_templates</li>
+                    <li>projects</li>
+                    <li>documents</li>
+                </ul>
+            </div>
         </div>
 
         <hr>
 
-        <button id="btn-example" class="btn btn-primary btn-lg">Example</button>
-
-        <hr>
-
         <h3>Response:</h3>
-        <pre id="response-output"></pre>
+        <textarea id="response-output" class="form-control" rows="10" readonly></textarea>
+        <button id="copy-btn" class="btn btn-secondary mt-2">Copy to Clipboard</button>
     </div>
 {% endblock %}
 
