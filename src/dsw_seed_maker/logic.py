@@ -1,3 +1,5 @@
+import os
+from dotenv import load_dotenv
 import pathlib
 from typing import Any
 from psycopg import sql
@@ -5,8 +7,6 @@ from psycopg import sql
 from .comm import S3Storage
 from .models import ExampleRequestDTO, ExampleResponseDTO
 from .comm.db import Database
-import os
-from dotenv import load_dotenv
 
 load_dotenv()
 

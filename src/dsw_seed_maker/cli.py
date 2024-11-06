@@ -52,9 +52,11 @@ def example():
               help='Output file to write to (JSON)')
 @click.option('-t', '--resource_type',
               type=click.Choice(['all', 'users', 'project_importers',
-                                 'knowledge_models', 'locales', 'document_templates', 'projects', 'documents']), default='all',
+                                 'knowledge_models', 'locales',
+                                 'document_templates', 'projects', 'documents']), default='all',
               help='Specify the type of resource to list '
-                   '(all, users, projects_importers, knowledge_models, locales, document_templates, projects, documents)')
+                   '(all, users, projects_importers, knowledge_models,'
+                   ' locales, document_templates, projects, documents)')
 def list_resources(output, resource_type):
     Config.check()
     # TODO: Implement list command (do it in logic, import & use here)
