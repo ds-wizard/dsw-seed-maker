@@ -54,15 +54,15 @@ async def post_example(req_dto: ExampleRequestDTO, request: fastapi.Request):
     return example_logic(req_dto)
 
 
-@app.get('/api/all')
-async def get_all():
-    LOG.debug('Fetching all...')
+@app.get('/api/all_resources')
+async def get_all_resources():
+    LOG.debug('Fetching all resources...')
     try:
-        all = list_logic("all")
-        return all
+        all_resources = list_logic("all")
+        return all_resources
     except Exception as e:
-        LOG.error('Error fetching all: %s', str(e))
-        raise fastapi.HTTPException(status_code=500, detail='Could not fetch all')
+        LOG.error('Error fetching all resources: %s', str(e))
+        raise fastapi.HTTPException(status_code=500, detail='Could not fetch all resources')
 
 
 @app.get('/api/users')
