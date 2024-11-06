@@ -54,18 +54,15 @@ async def post_example(req_dto: ExampleRequestDTO, request: fastapi.Request):
     return example_logic(req_dto)
 
 
-@app.get("/api/resources")
-async def list_resources():
-    resources = [
-        {"name": "Users", "endpoint": "/api/users"},
-        {"name": "Project Importers", "endpoint": "/api/project_importers"},
-        {"name": "Knowledge Models", "endpoint": "/api/knowledge_models"},
-        {"name": "Locale", "endpoint": "/api/locale"},
-        {"name": "Document Templates", "endpoint": "/api/document_templates"},
-        {"name": "Projects", "endpoint": "/api/projects"},
-        {"name": "Documents", "endpoint": "/api/documents"},
-    ]
-    return resources
+@app.get('/api/all')
+async def get_all():
+    LOG.debug('Fetching all...')
+    try:
+        all = list_logic("all")
+        return all
+    except Exception as e:
+        LOG.error('Error fetching all: %s', str(e))
+        raise fastapi.HTTPException(status_code=500, detail='Could not fetch all')
 
 
 @app.get('/api/users')
