@@ -16,15 +16,15 @@ def connect_to_db_logic() -> Database:
 
 def list_logic(resource_type: str) -> dict[str, list[dict[str, Any]]] | list[dict[str, Any]]:
     db = connect_to_db_logic()
-    if resource_type == 'all' :
+    if resource_type == 'all':
         return list_all_logic(db)
-    elif resource_type == 'users' :
+    elif resource_type == 'users':
         return {'users' : list_users_logic(db)}
-    elif resource_type == 'projects_importers' :
+    elif resource_type == 'projects_importers':
         return {'projects_importers' : list_projects_importers_logic(db)}
-    elif resource_type == 'knowledge_models' :
+    elif resource_type == 'knowledge_models':
         return {'knowledge_models' : list_knowledge_models_logic(db)}
-    elif resource_type == 'locale' :
+    elif resource_type == 'locale':
         return {'locale' : list_locales_logic(db)}
 
 
