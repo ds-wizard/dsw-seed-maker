@@ -5,7 +5,7 @@ import click
 
 from .config import Config
 from .consts import DEFAULT_ENCODING, PACKAGE_VERSION
-from .logic import list_logic#,download_file_logic
+from .logic import list_logic  #,download_file_logic
 
 
 class AliasedGroup(click.Group):
