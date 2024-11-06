@@ -20,13 +20,13 @@ def list_logic(resource_type: str) -> dict[str, list[dict[str, Any]]] | list[dic
     if resource_type == 'all':
         return list_all_logic(db)
     elif resource_type == 'users':
-        return {'users' : list_users_logic(db)}
+        return {'users': list_users_logic(db)}
     elif resource_type == 'projects_importers':
-        return {'projects_importers' : list_projects_importers_logic(db)}
+        return {'projects_importers': list_projects_importers_logic(db)}
     elif resource_type == 'knowledge_models':
-        return {'knowledge_models' : list_knowledge_models_logic(db)}
+        return {'knowledge_models': list_knowledge_models_logic(db)}
     elif resource_type == 'locale':
-        return {'locale' : list_locales_logic(db)}
+        return {'locale': list_locales_logic(db)}
     else:
         raise ValueError(f'Invalid resource type: {resource_type}')
 

@@ -51,8 +51,10 @@ def example():
               type=click.File('w', encoding=DEFAULT_ENCODING), default='-',
               help='Output file to write to (JSON)')
 @click.option('-t', '--resource_type',
-              type=click.Choice(['all', 'users', 'projects_importers', 'knowledge_models', 'locale']), default='all',
-              help='Specify the type of resource to list (all, users, projects_importers, knowledge_models or locale)')
+              type=click.Choice(['all', 'users', 'projects_importers',
+                                 'knowledge_models', 'locale']), default='all',
+              help='Specify the type of resource to list '
+                   '(all, users, projects_importers, knowledge_models or locale)')
 def list_resources(output, resource_type):
     Config.check()
     # TODO: Implement list command (do it in logic, import & use here)
