@@ -5,7 +5,7 @@ import click
 
 from .config import Config
 from .consts import DEFAULT_ENCODING, PACKAGE_VERSION
-from .logic import list_logic  #,download_file_logic
+from .logic import list_logic, process_input  # , parse_input_data  # ,download_file_logic
 
 
 class AliasedGroup(click.Group):
@@ -61,7 +61,7 @@ def list_resources(output, resource_type):
     Config.check()
     # TODO: Implement list command (do it in logic, import & use here)
     resources = list_logic(resource_type)
-    json_output = json.dumps({'resources': resources}, indent=4)
+    json_output = json.dumps(resources, indent=4)
     output.write(json_output)
     
 
@@ -74,11 +74,11 @@ def list_resources(output, resource_type):
 
 
 @cli.command(help='Create a seed package from input', name='make-seed')
-@click.option('-i', '--input',
+@click.option('-i', '--input', 'input_fp',
               type=click.File('r', encoding=DEFAULT_ENCODING), default='-',
               help='Input file to read from (JSON)')
 @click.option('-o', '--output-dir',
-              type=click.Path(dir_okay=True, file_okay=False), default='-',
+              type=click.Path(dir_okay=True, file_okay=False), default='output',
               help='Output directory to write to')
 def make_seed(input_fp, output_dir):
     Config.check()
@@ -87,3 +87,4 @@ def make_seed(input_fp, output_dir):
     out_dir.mkdir(parents=True, exist_ok=True)
     # TODO: Implement list command (do it in logic, import & use here)
     print(data)
+    process_input(data, output_dir)
