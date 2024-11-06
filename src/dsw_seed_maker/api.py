@@ -1,7 +1,6 @@
 import contextlib
 import logging
 import pathlib
-from typing import List
 
 import fastapi
 import fastapi.responses
@@ -11,7 +10,7 @@ import fastapi.templating
 from .config import Config
 from .consts import NICE_NAME, VERSION
 from .models import ExampleRequestDTO, ExampleResponseDTO
-from .logic import example_logic, list_logic  # Import the new logic function
+from .logic import example_logic, list_logic
 
 LOG = logging.getLogger('uvicorn.error')
 ROOT = pathlib.Path(__file__).parent
