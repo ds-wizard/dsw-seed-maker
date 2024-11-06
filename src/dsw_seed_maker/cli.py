@@ -20,7 +20,7 @@ class AliasedGroup(click.Group):
             return None
         if len(matches) == 1:
             return click.Group.get_command(self, ctx, matches[0])
-        return ctx.fail(f'Too many matches: {', '.join(sorted(matches))}')
+        return ctx.fail(f'Too many matches: {", ".join(sorted(matches))}')
 
 
 @click.group(cls=AliasedGroup)
