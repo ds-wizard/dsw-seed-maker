@@ -50,7 +50,6 @@ def example():
 @click.option('-o', '--output',
               type=click.File('w', encoding=DEFAULT_ENCODING), default='-',
               help='Output file to write to (JSON)')
-
 @click.option('-t', '--resource_type',
               type=click.Choice(['all', 'users', 'projects_importers',
                                  'knowledge_models', 'locale']), default='all',
