@@ -2,7 +2,7 @@
 
 # (!!) Change default password
 MINIO_NET="dsw_default"
-MINIO_BUCKET="engine-wizard"
+MINIO_BUCKET="wizard"
 MINIO_USER="minio"
 MINIO_PASS="minioPassword"
 
