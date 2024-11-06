@@ -1,38 +1,38 @@
 jQuery(document).ready(function($) {
-            const $btn_example = $('#btn-example');
-            const $input_example = $('#input-example');
-            const $responseOutput = $('#response-output');
-            const $copyBtn = $('#copy-btn');
+            const $btn_copy = $('#btn-copy');
+            const $btn_list = $('#btn-list');
+            const $input_search = $('#input-search');
+            const $output_search = $('#output-search');
 
             function fetchData() {
-                const userInput = $input_example.val();
+                const userInput = $input_search.val();
                 $.ajax({
                     url: `${ROOT_PATH}/api/${userInput}`,
                     type: 'GET',
                     success: function(response) {
                         const prettyResponse = JSON.stringify(response, null, 2);
-                        $responseOutput.val(prettyResponse);
-                        $responseOutput.prop('readonly', false);
+                        $output_search.val(prettyResponse);
+                        $output_search.prop('readonly', false);
                     },
                     error: function(xhr, status, error) {
                         const errorMessage = `Error fetching data: ${error}`;
-                        $responseOutput.val(errorMessage);
-                        $responseOutput.prop('readonly', true);
+                        $output_search.val(errorMessage);
+                        $output_search.prop('readonly', true);
                     }
                 });
             }
 
-            $btn_example.click(fetchData);
+            $btn_list.click(fetchData);
 
-            $input_example.keypress(function(event) {
+            $input_search.keypress(function(event) {
                 if (event.key === "Enter") {
                     event.preventDefault();
                     fetchData();
                 }
             });
 
-            $copyBtn.click(function() {
-                const content = $responseOutput.val().trim();
+            $btn_copy.click(function() {
+                const content = $output_search.val().trim();
                 try {
                     JSON.parse(content);
                     navigator.clipboard.writeText(content)
