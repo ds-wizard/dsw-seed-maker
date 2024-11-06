@@ -39,7 +39,7 @@ def list_logic(resource_type: str) -> dict[str, list[dict[str, Any]]] | list[dic
     if resource_type == 'users':
         return {'users': list_users_logic(db)}
     if resource_type == 'project_importers':
-        return {'projects_importers': list_project_importers_logic(db)}
+        return {'project_importers': list_project_importers_logic(db)}
     if resource_type == 'knowledge_models':
         return {'knowledge_models': list_knowledge_models_logic(db)}
     if resource_type == 'locales':
@@ -56,7 +56,7 @@ def list_logic(resource_type: str) -> dict[str, list[dict[str, Any]]] | list[dic
 
 def list_all_logic(db) -> dict[str, list[dict[str, str | Any]] | list[dict[str, Any]]]:
     users = list_users_logic(db)
-    projects_importers = list_project_importers_logic(db)
+    project_importers = list_project_importers_logic(db)
     knowledge_models = list_knowledge_models_logic(db)
     locales = list_locales_logic(db)
     document_templates = list_document_templates_logic(db)
@@ -64,7 +64,7 @@ def list_all_logic(db) -> dict[str, list[dict[str, str | Any]] | list[dict[str, 
     documents = list_documents_logic(db)
     resources = {
         'users': users,
-        'project_importers': projects_importers,
+        'project_importers': project_importers,
         'knowledge_models': knowledge_models,
         'locales': locales,
         'document_templates': document_templates,
