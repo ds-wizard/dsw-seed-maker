@@ -1,6 +1,8 @@
+import json
 import os
 import uuid
 from datetime import datetime
+from operator import index
 
 from dotenv import load_dotenv
 import pathlib
@@ -189,24 +191,38 @@ def download_file_logic(file_name: str, target_path: str) -> bool:
 
     return downloaded_file
 
+# Create a copy of tmp.js to output_dir
 def create_recipe_file(output_dir):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    file_path = os.path.join(output_dir, "recipe.txt")
-    file = open(file_path, 'w')
-    return file
+    with open("recipe_tmp.json", 'r') as template_recipe:
+        data = template_recipe.read()
+    with open(os.path.join(output_dir, 'recipe.json'), 'w') as recipe:
+        recipe.write(data)
+
+def add_db_file_to_recipe(recipe_path, db_file_name):
+    with open(recipe_path, 'r') as recipe_file:
+        recipe_data = json.load(recipe_file)
+
+        recipe_data["db"]["scripts"].append({"filename" : db_file_name})
+
+    with open(recipe_path, 'w') as recipe_file:
+        #recipe_file.write(str(recipe_data))
+        json.dump(recipe_data, recipe_file, ensure_ascii=False, indent=4)
+
 
 def process_input(data, output_dir):
     db = connect_to_db_logic()
-    recipe = create_recipe_file(output_dir)
+    create_recipe_file(output_dir)
     for resource_type, items in data.items():
         handler = resource_handlers.get(resource_type)
-        file = create_seed_files_db(resource_type, output_dir)
+        recipe_file = create_seed_files_db(resource_type, output_dir)
+        add_db_file_to_recipe(output_dir + "/recipe.json", "add_" + resource_type + ".sql")
         if handler:
             # Call the handler for each item in the list associated with this resource type
             for item in items:
-                handler(item, db, file, resource_type)
+                handler(item, db, recipe_file, resource_type)
         else:
             print(f"Unrecognized resource type: {resource_type}")
 
@@ -266,7 +282,7 @@ def handle_uuid(data, db, file, resource_type):
         insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
         write_seed_files_db(file, insert_query)
     else:
-        print("User  not found in database")
+        print("User not found in database")
 
 def handle_id(data, db, file, resource_type):
     query = "SELECT * FROM {resource_type} WHERE id = '{id}'".format(id=data['id'], resource_type=resource_tables[resource_type])
@@ -279,16 +295,93 @@ def handle_id(data, db, file, resource_type):
     else:
         print("User  not found in database")
 
+def handle_users(input_data, db, recipe_file, resource_type):
+    query = "SELECT * FROM {resource_type} WHERE uuid = '{uuid}'".format(uuid=input_data['uuid'], resource_type=resource_tables[resource_type])
+    resource = db.execute_query(query)
+    if len(resource) == 1:
+        print("This is what i got from db:")
+        print(resource)
+        insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
+        write_seed_files_db(recipe_file, insert_query)
+    else:
+        print("User not found in database")
+
+def handle_projects(input_data, db, recipe_file, resource_type):
+    query = "SELECT * FROM {resource_type} WHERE uuid = '{uuid}'".format(uuid=input_data['uuid'], resource_type=resource_tables[resource_type])
+    resource = db.execute_query(query)
+    if len(resource) == 1:
+        print("This is what i got from db:")
+        print(resource)
+        insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
+        write_seed_files_db(recipe_file, insert_query)
+    else:
+        print("User not found in database")
+
+def handle_documents(input_data, db, recipe_file, resource_type):
+    query = "SELECT * FROM {resource_type} WHERE uuid = '{uuid}'".format(uuid=input_data['uuid'], resource_type=resource_tables[resource_type])
+    resource = db.execute_query(query)
+    if len(resource) == 1:
+        print("This is what i got from db:")
+        print(resource)
+        insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
+        write_seed_files_db(recipe_file, insert_query)
+    else:
+        print("User not found in database")
+
+def handle_project_importers(input_data, db, recipe_file, resource_type):
+    query = "SELECT * FROM {resource_type} WHERE id = '{id}'".format(id=input_data['id'], resource_type=resource_tables[resource_type])
+    resource = db.execute_query(query)
+    if len(resource) == 1:
+        print("This is what i got from db:")
+        print(resource)
+        insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
+        write_seed_files_db(recipe_file, insert_query)
+    else:
+        print("User not found in database")
+
+def handle_knowledge_models(input_data, db, recipe_file, resource_type):
+    query = "SELECT * FROM {resource_type} WHERE id = '{id}'".format(id=input_data['id'], resource_type=resource_tables[resource_type])
+    resource = db.execute_query(query)
+    if len(resource) == 1:
+        print("This is what i got from db:")
+        print(resource)
+        insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
+        write_seed_files_db(recipe_file, insert_query)
+    else:
+        print("User not found in database")
+
+def handle_locales(input_data, db, recipe_file, resource_type):
+    query = "SELECT * FROM {resource_type} WHERE id = '{id}'".format(id=input_data['id'], resource_type=resource_tables[resource_type])
+    resource = db.execute_query(query)
+    if len(resource) == 1:
+        print("This is what i got from db:")
+        print(resource)
+        insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
+        write_seed_files_db(recipe_file, insert_query)
+    else:
+        print("User not found in database")
+
+def handle_document_templates(input_data, db, recipe_file, resource_type):
+    query = "SELECT * FROM {resource_type} WHERE id = '{id}'".format(id=input_data['id'], resource_type=resource_tables[resource_type])
+    resource = db.execute_query(query)
+    if len(resource) == 1:
+        print("This is what i got from db:")
+        print(resource)
+        insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
+        write_seed_files_db(recipe_file, insert_query)
+    else:
+        print("User not found in database")
+
 
 # Map resource types to handler functions
 resource_handlers = {
-    "users": handle_uuid,
-    "projects": handle_uuid,
-    "documents": handle_uuid,
-    "project_importers": handle_id,
-    "knowledge_models": handle_id,
-    "locales": handle_id,
-    "document_templates": handle_id,
+    "users": handle_users,
+    "projects": handle_projects,
+    "documents": handle_documents,
+    "project_importers": handle_project_importers,
+    "knowledge_models": handle_knowledge_models,
+    "locales":handle_locales,
+    "document_templates": handle_document_templates,
 }
 
 # Map resources to their table names
