@@ -191,12 +191,22 @@ def return_fkey_dependency(resource_type, dependent_resource_type):
     return None
 
 
+
+def write_seed_files_db(file, query):
+    file.write(query + "\n")
+
+
+def generate_insert_query(data, table):
+    columns = ', '.join(data.keys())
+    values = ", ".join(format_for_sql(data))
+    return f"INSERT INTO {table} ({columns}) VALUES ({values});"
+
+
 def handle_resource(resource_type, resource_id):
     if resource_id not in processed_resources:
         processed_resources.add(resource_id)
         query = generate_select_query(resource_type, resource_identification[resource_type], resource_id)
         resources = db.execute_query(query)
-
         for resource in resources:
             # Dependencies
             for dependency in resource_dependencies.get(resource_type, []):

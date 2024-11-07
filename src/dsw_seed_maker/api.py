@@ -148,16 +148,14 @@ router = fastapi.APIRouter()
 @router.post("/api/process")
 async def process_data(data: dict):
     try:
-        input_data = json.loads(data["data"])  # Parse the input JSON data
-        output_dir = "output"  # Define your output directory
-        process_input(input_data, output_dir)  # Call the function with the data
+        input_data = json.loads(data["data"])
+        output_dir = "output"
+        process_input(input_data, output_dir)
         return fastapi.responses.JSONResponse(content={"status": "success", "message": "Processing completed successfully"})
     except Exception as e:
         return fastapi.responses.JSONResponse(status_code=400, content={"status": "error", "message": str(e)})
 
-# Make sure to include the router in the FastAPI app
 app.include_router(router)
-
 
 
 @app.post('/api/seed-package', response_class=fastapi.responses.JSONResponse)
