@@ -6,18 +6,18 @@
     <div class="container">
         <h1>Welcome to DSW Seed Maker</h1>
 
-        <hr>
-
-        <div class="form-group">
-            <label for="input-search">Search for resources:</label>
-
-            <div class="d-flex">
-                <input type="text" class="form-control me-2" id="input-search" placeholder="Enter what you are looking for here...">
-                <button id="btn-list" class="btn btn-primary">List</button>
+        <div class="form-section">
+            <h2>Search for Resources</h2>
+            <div class="form-group">
+                <label for="input-search">Enter your search query:</label>
+                <div class="d-flex">
+                    <input type="text" class="form-control me-2" id="input-search" placeholder="Search resources...">
+                    <button id="btn-list" class="btn btn-primary">List</button>
+                </div>
             </div>
 
-            <div id="seedHelp" class="form-text text-muted">
-                Following resources are available for seeding:
+            <div id="seedHelp" class="help-text mt-3">
+                <p><strong>Available resources for seeding:</strong></p>
                 <ul>
                     <li>all_resources</li>
                     <li>users</li>
@@ -33,9 +33,15 @@
 
         <hr>
 
-        <h3>Response:</h3>
-        <textarea id="output-search" class="form-control" rows="10" readonly></textarea>
-        <button id="btn-copy" class="btn btn-secondary mt-2">Copy to Clipboard</button>
+        <div class="response-section">
+            <h3>Response:</h3>
+            <textarea id="output-search" class="form-control" rows="10" readonly></textarea>
+            <button id="btn-copy" class="btn btn-secondary mt-2">Copy to Clipboard</button>
+        </div>
+
+        <footer class="footer mt-4">
+            <p>DSW Seed Maker was created during BioHackathon2024</p>
+        </footer>
     </div>
 {% endblock %}
 
