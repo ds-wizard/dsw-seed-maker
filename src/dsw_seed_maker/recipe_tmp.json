@@ -1,0 +1,20 @@
+{
+  "name": "Recipe Template",
+  "description": "This is the recipe template. It is used to create new recipes.",
+  "db": {
+    "scripts": [
+    ],
+    "tenantIdPlaceholder": "<<|TENANT-ID|>>"
+  },
+  "s3": {
+    "dir": "app",
+    "filenameReplace": {
+      ":": "_"
+    }
+  },
+  "uuids": {
+    "count": 3,
+    "placeholder": "{{-UUID[n]-}}"
+  },
+  "initWait": 1.0
+}
