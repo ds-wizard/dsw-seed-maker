@@ -195,7 +195,6 @@ def download_file_logic(file_name: str, target_path: str) -> bool:
 def create_recipe_file(output_dir):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-
     with open("recipe_tmp.json", 'r') as template_recipe:
         data = template_recipe.read()
     with open(os.path.join(output_dir, 'recipe.json'), 'w') as recipe:
@@ -267,7 +266,8 @@ def create_seed_files_db(resource_type, output_dir):
 
 def write_seed_files_db(file, query):
     file.write(query + "\n")
-
+    
+    
 def generate_insert_query(data, table):
     columns = ', '.join(data.keys())
     values = ", ".join(format_for_sql(data))
@@ -331,6 +331,8 @@ def handle_knowledge_models(input_data, db, recipe_file, resource_type, output_d
     query = "SELECT * FROM {resource_type} WHERE id = '{id}'".format(id=input_data['id'], resource_type=resource_tables[resource_type])
     resource = db.execute_query(query)
     if len(resource) == 1:
+        print("This is what i got from db:")
+        print(resource)
         insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
         write_seed_files_db(recipe_file, insert_query)
     else:
