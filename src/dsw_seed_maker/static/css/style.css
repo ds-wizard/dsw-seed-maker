@@ -89,18 +89,10 @@ h1 {
     color: #fff;
 }
 
-.btn-primary:hover {
-    background-color: darken(var(--primary-color), 10%);  /* Slightly darker on hover */
-}
-
 .btn-secondary {
     background-color: var(--secondary-color);  /* Secondary color for secondary buttons */
     color: #fff;
     border: none;
-}
-
-.btn-secondary:hover {
-    background-color: darken(var(--secondary-color), 10%);  /* Slightly darker on hover */
 }
 
 /* Textarea Styles */

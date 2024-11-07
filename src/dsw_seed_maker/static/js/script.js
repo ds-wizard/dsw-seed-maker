@@ -1,9 +1,11 @@
 jQuery(document).ready(function ($) {
     const $btn_copy = $('#btn-copy');
     const $btn_list = $('#btn-list');
+    const $btn_process = $('#btn-process');  // Add reference to the "Process" button
     const $input_search = $('#input-search');
     const $output_search = $('#output-search');
 
+    // Function to fetch data from the API
     function fetchData() {
         const userInput = $input_search.val();
         $.ajax({
@@ -22,7 +24,31 @@ jQuery(document).ready(function ($) {
         });
     }
 
+    // Function to call the process API endpoint
+    function processData() {
+        const inputData = $output_search.val();  // Get the current content of the output_search (editable textbox)
+
+        $.ajax({
+            url: `${ROOT_PATH}/api/process`,  // Call the new endpoint
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ data: inputData }),  // Send the input data
+            success: function (response) {
+                const processedData = JSON.stringify(response, null, 2);
+                $output_search.val(processedData);  // Display the processed data in the textbox
+                $output_search.prop('readonly', false);
+            },
+            error: function (xhr, status, error) {
+                const errorMessage = `Error processing data: ${error}`;
+                $output_search.val(errorMessage);
+                $output_search.prop('readonly', true);
+            }
+        });
+    }
+
+    // Button click event handlers
     $btn_list.click(fetchData);
+    $btn_process.click(processData);  // Attach processData to the "Process" button click
 
     $input_search.keypress(function (event) {
         if (event.key === "Enter") {

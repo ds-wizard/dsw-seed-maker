@@ -195,7 +195,9 @@ def download_file_logic(file_name: str, target_path: str) -> bool:
 def create_recipe_file(output_dir):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    with open("recipe_tmp.json", 'r') as template_recipe:
+    script_dir = pathlib.Path(__file__).parent
+    recipe_file_path = script_dir / 'recipe_tmp.json'
+    with open(recipe_file_path, 'r') as template_recipe:
         data = template_recipe.read()
     with open(os.path.join(output_dir, 'recipe.json'), 'w') as recipe:
         recipe.write(data)
@@ -291,12 +293,47 @@ def handle_id(data, db, file, resource_type):
     else:
         print("User  not found in database")
 
+def log_and_write_query(resource, resource_type, recipe_file, db, file_dir):
+    try:
+        # Generate insert query
+        insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
+        print(f"Generated insert query: {insert_query}")
+
+        # Write to recipe file
+        write_seed_files_db(recipe_file, insert_query)
+
+        # Ensure recipe_file is a path string, not a file object
+        if isinstance(recipe_file, str):
+            file_path = recipe_file
+        else:
+            # If recipe_file is a file object, get the file path
+            file_path = recipe_file.name  # .name gives the file path for file objects
+
+        # Check if the file exists and is writable
+        if not os.path.exists(file_path):  # Check if the file exists
+            print(f"Error: The file path {file_path} does not exist.")
+            return
+        elif not os.access(file_path, os.W_OK):  # Check if the file is writable
+            print(f"Error: {file_path} is not writable.")
+            return
+
+        # Open the file in append mode
+        with open(file_path, 'a') as f:
+            print(f"Writing query to {file_path}")
+            f.write(insert_query + '\n')
+            print(f"Successfully wrote query to {file_path}")
+
+    except Exception as e:
+        print(f"Error writing query to file: {e}")
+
+
 def handle_users(input_data, db, recipe_file, resource_type, output_dir):
     query = "SELECT * FROM {resource_type} WHERE uuid = '{uuid}'".format(uuid=input_data['uuid'], resource_type=resource_tables[resource_type])
     resource = db.execute_query(query)
     if len(resource) == 1:
         insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
         write_seed_files_db(recipe_file, insert_query)
+        log_and_write_query(resource, resource_type, recipe_file, db, output_dir)
     else:
         print("User not found in database/more than one record with that ID")
 
@@ -306,6 +343,7 @@ def handle_projects(input_data, db, recipe_file, resource_type, output_dir):
     if len(resource) == 1:
         insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
         write_seed_files_db(recipe_file, insert_query)
+        log_and_write_query(resource, resource_type, recipe_file, db, output_dir)
     else:
         print("User not found in database")
 
@@ -315,6 +353,7 @@ def handle_documents(input_data, db, recipe_file, resource_type, output_dir):
     if len(resource) == 1:
         insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
         write_seed_files_db(recipe_file, insert_query)
+        log_and_write_query(resource, resource_type, recipe_file, db, output_dir)
     else:
         print("User not found in database")
 
@@ -324,6 +363,7 @@ def handle_project_importers(input_data, db, recipe_file, resource_type, output_
     if len(resource) == 1:
         insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
         write_seed_files_db(recipe_file, insert_query)
+        log_and_write_query(resource, resource_type, recipe_file, db, output_dir)
     else:
         print("Project Importer not found in database")
 
@@ -335,6 +375,7 @@ def handle_knowledge_models(input_data, db, recipe_file, resource_type, output_d
         print(resource)
         insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
         write_seed_files_db(recipe_file, insert_query)
+        log_and_write_query(resource, resource_type, recipe_file, db, output_dir)
     else:
         print("User not found in database")
 
@@ -346,6 +387,7 @@ def handle_locales(input_data, db, recipe_file, resource_type,  output_dir):
         if len(resource) == 1:
             insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
             write_seed_files_db(recipe_file, insert_query)
+            log_and_write_query(resource, resource_type, recipe_file, db, output_dir)
             s3_locales = download_file_logic("locales/" + input_data['id'], output_dir + "/app" + "/locales/" + input_data['name'] )
             if s3_locales:
                 print("File downloaded")
@@ -360,6 +402,7 @@ def handle_document_templates(input_data, db, recipe_file, resource_type, output
     if len(resource) == 1:
         insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
         write_seed_files_db(recipe_file, insert_query)
+        log_and_write_query(resource, resource_type, recipe_file, db, output_dir)
     else:
         print("User not found in database")
 
