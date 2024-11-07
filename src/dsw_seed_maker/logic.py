@@ -191,11 +191,9 @@ def download_file_logic(file_name: str, target_path: str) -> bool:
 
     return downloaded_file
 
-# Create a copy of tmp.js to output_dir
 def create_recipe_file(output_dir):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-
     with open("recipe_tmp.json", 'r') as template_recipe:
         data = template_recipe.read()
     with open(os.path.join(output_dir, 'recipe.json'), 'w') as recipe:
