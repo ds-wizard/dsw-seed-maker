@@ -2,7 +2,6 @@ import json
 import os
 import uuid
 from datetime import datetime
-from operator import index
 
 from dotenv import load_dotenv
 import pathlib
@@ -268,8 +267,8 @@ def create_seed_files_db(resource_type, output_dir):
 
 def write_seed_files_db(file, query):
     file.write(query + "\n")
-    
-    
+
+
 def generate_insert_query(data, table):
     columns = ', '.join(data.keys())
     values = ", ".join(format_for_sql(data))
