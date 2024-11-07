@@ -1,4 +1,7 @@
 import os
+import uuid
+from datetime import datetime
+
 from dotenv import load_dotenv
 import pathlib
 from typing import Any
@@ -186,17 +189,56 @@ def download_file_logic(file_name: str, target_path: str) -> bool:
 
     return downloaded_file
 
+def create_recipe_file(output_dir):
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    file_path = os.path.join(output_dir, "recipe.txt")
+    file = open(file_path, 'w')
+    return file
+
 def process_input(data, output_dir):
     db = connect_to_db_logic()
+    recipe = create_recipe_file(output_dir)
     for resource_type, items in data.items():
         handler = resource_handlers.get(resource_type)
         file = create_seed_files_db(resource_type, output_dir)
         if handler:
             # Call the handler for each item in the list associated with this resource type
             for item in items:
-                handler(item, db, file)
+                handler(item, db, file, resource_type)
         else:
             print(f"Unrecognized resource type: {resource_type}")
+
+
+def format_for_sql(data_dict):
+    sql_values = []
+    for key, value in data_dict.items():
+        if isinstance(value, uuid.UUID):
+            # UUID should be wrapped in single quotes in the SQL query
+            sql_values.append(f"'{str(value)}'")
+
+        elif isinstance(value, datetime):
+            # Format datetime as 'YYYY-MM-DD HH:MM:SS' (no timezone)
+            sql_values.append(f"'{value.strftime('%Y-%m-%d %H:%M:%S')}'")
+
+        elif isinstance(value, list):
+            # Handle lists, convert to PostgreSQL-style array format (e.g., {'value1', 'value2'})
+            formatted_list = '\'{' + ', '.join(
+                [f"{item}" if isinstance(item, str) else str(item) for item in value]) + '}\''
+            sql_values.append(formatted_list)
+
+        elif value is None:
+            sql_values.append('NULL')  # Convert None to SQL NULL
+
+        elif isinstance(value, bool):
+            # Convert boolean to SQL TRUE/FALSE (no quotes)
+            sql_values.append('TRUE' if value else 'FALSE')
+
+        else:
+            # For any other data type (strings, numbers), ensure they are wrapped in single quotes
+            sql_values.append(f"'{str(value)}'")
+    return sql_values
 
 def create_seed_files_db(resource_type, output_dir):
     if not os.path.exists(output_dir):
@@ -206,63 +248,48 @@ def create_seed_files_db(resource_type, output_dir):
     file = open(file_path, 'w')
     return file
 
-def write_seed_files_db(file, resource_type, resource):
-    data = "INSERT INTO {table} VALUES {values};".format(table=resource_tables[resource_type], values=resource)
-    file.write(data + "\n")
+def write_seed_files_db(file, query):
+    file.write(query + "\n")
 
-# Define generic handler functions for each resource type
-def handle_user(data, db, file):
-    print(f"Processing user: {data['uuid']} - {data['first_name']} {data['last_name']} ({data['role']})")
-    # Use a parameterized query for better syntax and security
-    query = "SELECT * FROM user_entity WHERE uuid = '{uuid}'".format(uuid=data['uuid'])
+def generate_insert_query(data, table):
+    columns = ', '.join(data.keys())
+    values = ", ".join(format_for_sql(data))
+    return f"INSERT INTO {table} ({columns}) VALUES ({values});"
+
+def handle_uuid(data, db, file, resource_type):
+    query = "SELECT * FROM {resource_type} WHERE uuid = '{uuid}'".format(uuid=data['uuid'], resource_type=resource_tables[resource_type])
     resource = db.execute_query(query)
-    #check for only one resource otherwise print error
     if len(resource) == 1:
         print("This is what i got from db:")
         print(resource)
-        write_seed_files_db(file, "users", resource[0])
+        insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
+        write_seed_files_db(file, insert_query)
     else:
         print("User  not found in database")
 
+def handle_id(data, db, file, resource_type):
+    query = "SELECT * FROM {resource_type} WHERE id = '{id}'".format(id=data['id'], resource_type=resource_tables[resource_type])
+    resource = db.execute_query(query)
+    if len(resource) == 1:
+        print("This is what i got from db:")
+        print(resource)
+        insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
+        write_seed_files_db(file, insert_query)
+    else:
+        print("User  not found in database")
 
-def handle_project(data, db, file):
-    print(f"Processing project: {data['uuid']} - {data['name']}")
-    # Add specific logic for handling a project here
+def create_recipe(data, output_dir):
 
-
-def handle_document(data, db, file):
-    print(f"Processing document: {data['uuid']} - {data['name']}")
-    # Add specific logic for handling a document here
-
-
-def handle_project_importer(data, db, file):
-    print(f"Processing project importer: {data['id']} - {data['name']}")
-    # Add specific logic for handling a project importer here
-
-
-def handle_knowledge_model(data, db, file):
-    print(f"Processing knowledge model: {data['id']} - {data['name']}")
-    # Add specific logic for handling a knowledge model here
-
-
-def handle_locale(data, db, file):
-    print(f"Processing locale: {data['id']} - {data['name']} ({data['code']})")
-    # Add specific logic for handling a locale here
-
-
-def handle_document_template(data, db, file):
-    print(f"Processing document template: {data['id']} - {data['name']}")
-    # Add specific logic for handling a document template here
 
 # Map resource types to handler functions
 resource_handlers = {
-    "users": handle_user,
-    "projects": handle_project,
-    "documents": handle_document,
-    "project_importers": handle_project_importer,
-    "knowledge_models": handle_knowledge_model,
-    "locales": handle_locale,
-    "document_templates": handle_document_template,
+    "users": handle_uuid,
+    "projects": handle_uuid,
+    "documents": handle_uuid,
+    "project_importers": handle_id,
+    "knowledge_models": handle_id,
+    "locales": handle_id,
+    "document_templates": handle_id,
 }
 
 # Map resources to their table names
