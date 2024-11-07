@@ -278,9 +278,6 @@ def handle_id(data, db, file, resource_type):
     else:
         print("User  not found in database")
 
-def create_recipe(data, output_dir):
-
-
 # Map resource types to handler functions
 resource_handlers = {
     "users": handle_uuid,
