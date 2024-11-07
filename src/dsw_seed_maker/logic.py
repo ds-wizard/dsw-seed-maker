@@ -3,6 +3,7 @@ import os
 import uuid
 from datetime import datetime
 from operator import index
+from venv import create
 
 from dotenv import load_dotenv
 import pathlib
@@ -221,7 +222,7 @@ def process_input(data, output_dir):
         if handler:
             # Call the handler for each item in the list associated with this resource type
             for item in items:
-                handler(item, db, recipe_file, resource_type, output_dir)
+                handler(next(iter(item.values()), None), db, recipe_file, resource_type, output_dir)
         else:
             print(f"Unrecognized resource type: {resource_type}")
 
@@ -261,7 +262,7 @@ def create_seed_files_db(resource_type, output_dir):
         os.makedirs(output_dir)
 
     file_path = os.path.join(output_dir, f"add_{resource_type}.sql")
-    file = open(file_path, 'w')
+    file = open(file_path, 'w', encoding='utf-8')
     return file
 
 def write_seed_files_db(file, query):
@@ -273,35 +274,12 @@ def generate_insert_query(data, table):
     values = ", ".join(format_for_sql(data))
     return f"INSERT INTO {table} ({columns}) VALUES ({values});"
 
-def handle_uuid(data, db, file, resource_type):
-    query = "SELECT * FROM {resource_type} WHERE uuid = '{uuid}'".format(uuid=data['uuid'], resource_type=resource_tables[resource_type])
-    resource = db.execute_query(query)
-    if len(resource) == 1:
-        insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
-        write_seed_files_db(file, insert_query)
-    else:
-        print("User not found in database")
+def generate_select_query(resource_type, attr, value):
+    return "SELECT * FROM {table} WHERE {attr} = '{value}'".format(value=value, table=resource_tables[resource_type], attr=attr)
 
-def handle_id(data, db, file, resource_type):
-    query = "SELECT * FROM {resource_type} WHERE id = '{id}'".format(id=data['id'], resource_type=resource_tables[resource_type])
-    resource = db.execute_query(query)
-    if len(resource) == 1:
-        insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
-        write_seed_files_db(file, insert_query)
-    else:
-        print("User  not found in database")
 
-def handle_users(input_data, db, recipe_file, resource_type, output_dir):
-    query = "SELECT * FROM {resource_type} WHERE uuid = '{uuid}'".format(uuid=input_data['uuid'], resource_type=resource_tables[resource_type])
-    resource = db.execute_query(query)
-    if len(resource) == 1:
-        insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
-        write_seed_files_db(recipe_file, insert_query)
-    else:
-        print("User not found in database/more than one record with that ID")
-
-def handle_projects(input_data, db, recipe_file, resource_type, output_dir):
-    query = "SELECT * FROM {resource_type} WHERE uuid = '{uuid}'".format(uuid=input_data['uuid'], resource_type=resource_tables[resource_type])
+def handle_users(resource_id, db, recipe_file, resource_type, output_dir):
+    query = generate_select_query(resource_type, "uuid", resource_id)
     resource = db.execute_query(query)
     if len(resource) == 1:
         insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
@@ -309,17 +287,30 @@ def handle_projects(input_data, db, recipe_file, resource_type, output_dir):
     else:
         print("User not found in database")
 
-def handle_documents(input_data, db, recipe_file, resource_type, output_dir):
-    query = "SELECT * FROM {resource_type} WHERE uuid = '{uuid}'".format(uuid=input_data['uuid'], resource_type=resource_tables[resource_type])
+def handle_projects(resource_id, db, recipe_file, resource_type, output_dir):
+    query = generate_select_query(resource_type, "uuid", resource_id )
     resource = db.execute_query(query)
     if len(resource) == 1:
         insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
         write_seed_files_db(recipe_file, insert_query)
+        handle_knowledge_models(resource[0]['package_id'], db, recipe_file, "knowledge_models", output_dir)
+        handle_document_templates(resource[0]['document_template_id'], db, recipe_file, "document_templates", output_dir)
     else:
-        print("User not found in database")
+        print("Project not found in database")
 
-def handle_project_importers(input_data, db, recipe_file, resource_type, output_dir):
-    query = "SELECT * FROM {resource_type} WHERE id = '{id}'".format(id=input_data['id'], resource_type=resource_tables[resource_type])
+def handle_documents(resource_id, db, recipe_file, resource_type, output_dir):
+    query = generate_select_query(resource_type, "uuid", resource_id)
+    resource = db.execute_query(query)
+    if len(resource) == 1:
+        insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
+        write_seed_files_db(recipe_file, insert_query)
+        handle_document_templates(resource[0]['document_template_id'], db, recipe_file, "document_templates", output_dir)
+        handle_projects(resource[0]['questionnaire_uuid'], db, recipe_file, "projects", output_dir)
+    else:
+        print("Document not found in database")
+
+def handle_project_importers(resource_id, db, recipe_file, resource_type, output_dir):
+    query = generate_select_query(resource_type, "id", resource_id)
     resource = db.execute_query(query)
     if len(resource) == 1:
         insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
@@ -327,26 +318,31 @@ def handle_project_importers(input_data, db, recipe_file, resource_type, output_
     else:
         print("Project Importer not found in database")
 
-def handle_knowledge_models(input_data, db, recipe_file, resource_type, output_dir):
-    query = "SELECT * FROM {resource_type} WHERE id = '{id}'".format(id=input_data['id'], resource_type=resource_tables[resource_type])
+
+def handle_knowledge_models(resource_id, db, recipe_file, resource_type, output_dir):
+    query = generate_select_query(resource_type, "id", resource_id)
     resource = db.execute_query(query)
     if len(resource) == 1:
-        print("This is what i got from db:")
-        print(resource)
-        insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
-        write_seed_files_db(recipe_file, insert_query)
+        if resource[0]['previous_package_id'] is None:
+            insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
+            write_seed_files_db(recipe_file, insert_query)
+        else:
+            # print("\n PRINT THE previous package id \n")
+            # print(resource[0]['previous_package_id'])
+            handle_knowledge_models(resource[0]['previous_package_id'], db, recipe_file, resource_type, output_dir)
+            insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
+            write_seed_files_db(recipe_file, insert_query)
     else:
         print("User not found in database")
 
-def handle_locales(input_data, db, recipe_file, resource_type,  output_dir):
-    if input_data['id'] != 'wizard:default:1.0.0':
-        print("\n" + input_data['id'] + "\n")
-        query = "SELECT * FROM {resource_type} WHERE id = '{id}'".format(id=input_data['id'], resource_type=resource_tables[resource_type])
+def handle_locales(resource_id, db, recipe_file, resource_type,  output_dir):
+    if resource_id != 'wizard:default:1.0.0':
+        query = generate_select_query(resource_type, "id", resource_id )
         resource = db.execute_query(query)
         if len(resource) == 1:
             insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
             write_seed_files_db(recipe_file, insert_query)
-            s3_locales = download_file_logic("locales/" + input_data['id'], output_dir + "/app" + "/locales/" + input_data['name'] )
+            s3_locales = download_file_logic("locales/" + resource_id, output_dir + "/app" + "/locales/" + resource[0]['name'])
             if s3_locales:
                 print("File downloaded")
             else:
@@ -354,14 +350,36 @@ def handle_locales(input_data, db, recipe_file, resource_type,  output_dir):
         else:
             print("User not found in database")
 
-def handle_document_templates(input_data, db, recipe_file, resource_type, output_dir):
-    query = "SELECT * FROM {resource_type} WHERE id = '{id}'".format(id=input_data['id'], resource_type=resource_tables[resource_type])
+def handle_document_templates(resource_id, db, recipe_file, resource_type, output_dir):
+    query = generate_select_query(resource_type, "id" , resource_id )
     resource = db.execute_query(query)
     if len(resource) == 1:
         insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
         write_seed_files_db(recipe_file, insert_query)
+        handle_document_templates_files(resource_id, db, recipe_file)
+        handle_document_templates_assets(resource_id, db, recipe_file, output_dir)
     else:
         print("User not found in database")
+
+def handle_document_templates_assets(doc_temp_id, db, recipe_file, output_dir):
+    query = generate_select_query("document_template_asset", "document_template_id", doc_temp_id)
+    resource = db.execute_query(query)
+    for asset in resource:
+        insert_query = generate_insert_query(asset, "document_template_asset")
+        write_seed_files_db(recipe_file, insert_query)
+        s3_assets = download_file_logic("templates/" + str(doc_temp_id) + "/" + str(asset['uuid']), output_dir + "/app" + "/document_templates/" + str(doc_temp_id).replace(":", "_") + "/asset_" + str(asset['uuid']) )
+        if s3_assets:
+            print("File downloaded")
+        else:
+            print("File not found")
+
+
+def handle_document_templates_files(doc_temp_id, db, recipe_file):
+    query = generate_select_query("document_template_file", "document_template_id", doc_temp_id)
+    resource = db.execute_query(query)
+    for file in resource:
+        insert_query = generate_insert_query(file, "document_template_file")
+        write_seed_files_db(recipe_file, insert_query)
 
 
 # Map resource types to handler functions
@@ -384,4 +402,6 @@ resource_tables = {
     "knowledge_models": "package",
     "locales": "locale",
     "document_templates": "document_template",
+    "document_template_asset": "document_template_asset",
+    "document_template_file": "document_template_file"
 }
