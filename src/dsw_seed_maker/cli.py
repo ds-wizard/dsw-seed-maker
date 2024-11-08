@@ -86,5 +86,4 @@ def make_seed(input_fp, output_dir):
     out_dir = pathlib.Path(output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     # TODO: Implement list command (do it in logic, import & use here)
-    print(data)
     process_input(data, output_dir)
