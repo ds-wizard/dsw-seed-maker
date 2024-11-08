@@ -43,7 +43,7 @@ def connect_to_s3_logic() -> S3Storage:
 def generate_insert_query(data, table):
     columns = ', '.join(data.keys())
     values = ", ".join(format_for_sql(data))
-    return f"INSERT INTO {table} ({columns}) VALUES ({values});"
+    return f"INSERT INTO {table} ({columns}) VALUES ({values})\;"
 
 
 def generate_select_query(resource_type, attr, value):
@@ -61,7 +61,7 @@ def list_logic(resource_type: str) -> dict[str, list[dict[str, Any]]] | list[dic
             resource[each] = list_resource(each, resource_attributes[each])
         return resource
     else:
-        return {resource_type : list_resource(resource_type, resource_attributes[resource_type])}
+        return {resource_type: list_resource(resource_type, resource_attributes[resource_type])}
 
 
 def list_resource(resource_type, attributes):
@@ -85,10 +85,11 @@ def download_file_s3(s3_path: str) -> bool:
     target = pathlib.Path(target_path)
     downloaded_file = s3.download_file(s3_path, target)
 
-    if not downloaded_file:
+    if downloaded_file:
+        return downloaded_file
+    else:
       print(f"File '{s3_path}' not found in bucket.")
 
-    return downloaded_file
 
 # Create a copy of tmp.js to output_dir
 def create_recipe_file():
@@ -194,7 +195,6 @@ def handle_resource(resource_type, resource_id):
         query = generate_select_query(resource_type, resource_identification[resource_type], resource_id)
         resources = db.execute_query(query)
 
-
         for resource in resources:
             # Dependencies
             for dependency in resource_dependencies.get(resource_type, []):
@@ -204,9 +204,8 @@ def handle_resource(resource_type, resource_id):
                     dep_id = resource[dep_id_key]
                     handle_resource(dep_type, dep_id)
 
-
             # S3 objects
-            if resource_id != 'wizard:default:1.0.0' and resource_s3_objects[resource_type] != "" :
+            if resource_id != 'wizard:default:1.0.0' and resource_s3_objects[resource_type] != "":
                 s3_object = resource_s3_objects[resource_type]
                 # If the S3 object contains a placeholder, replace it with the dependent resource's value
                 if has_placeholder_in_s3_objects(resource_s3_objects[resource_type]):
@@ -223,7 +222,7 @@ def handle_resource(resource_type, resource_id):
             write_seed_files_db(output_dir, resource_type, insert_query)
 
             # Dependent resources of this one, that users can't see (document_template_asset, document_template_file)
-            for dependent_resource_type in resources_part_of.get(resource_type,[]):
+            for dependent_resource_type in resources_part_of.get(resource_type, []):
                 dependent_resource_id_key = return_fkey_dependency(dependent_resource_type, resource_type)
                 query = generate_select_query(dependent_resource_type, dependent_resource_id_key,
                                               resource[resource_identification[resource_type]])
@@ -267,24 +266,24 @@ resource_dependencies = {
 resource_dependencies_keys = {
     "users": [],
     "projects": [
-        { "knowledge_models" : "package_id" },
-        { "document_templates" : "document_template_id" }
+        {"knowledge_models": "package_id"},
+        {"document_templates": "document_template_id"}
     ],
     "documents": [
-        { "document_templates" : "document_template_id" },
-        { "projects" : "questionnaire_uuid" }
+        {"document_templates": "document_template_id"},
+        {"projects": "questionnaire_uuid"}
     ],
     "project_importers" : [],
     "knowledge_models" : [
-        { "knowledge_models" : "previous_package_id"}
+        {"knowledge_models": "previous_package_id"}
     ],
     "locales": [],
     "document_templates": [],
     "document_template_asset" : [
-        { "document_templates" : "document_template_id" }
+        {"document_templates": "document_template_id"}
     ],
     "document_template_file" : [
-        { "document_templates" : "document_template_id" }
+        {"document_templates": "document_template_id"}
     ]
 }
 
