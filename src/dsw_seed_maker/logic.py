@@ -150,7 +150,8 @@ def has_placeholder_in_s3_objects(resource_s3_objects):
     return False
 
 
-def format_for_sql(data_dict): # TODO needs help a lot
+# TODO needs help a lot
+def format_for_sql(data_dict):
     sql_values = []
     for key, value in data_dict.items():
         if isinstance(value, uuid.UUID):
@@ -188,12 +189,11 @@ def return_fkey_dependency(resource_type, dependent_resource_type):
 
 
 def handle_resource(resource_type, resource_id):
-    if resource_id in processed_resources:
-        return
-    else:
+    if resource_id not in processed_resources:
         processed_resources.add(resource_id)
         query = generate_select_query(resource_type, resource_identification[resource_type], resource_id)
         resources = db.execute_query(query)
+
 
         for resource in resources:
             # Dependencies
@@ -204,8 +204,9 @@ def handle_resource(resource_type, resource_id):
                     dep_id = resource[dep_id_key]
                     handle_resource(dep_type, dep_id)
 
+
             # S3 objects
-            if resource_id != 'wizard:default:1.0.0' and resource_s3_objects[resource_type] != "":
+            if resource_id != 'wizard:default:1.0.0' and resource_s3_objects[resource_type] != "" :
                 s3_object = resource_s3_objects[resource_type]
                 # If the S3 object contains a placeholder, replace it with the dependent resource's value
                 if has_placeholder_in_s3_objects(resource_s3_objects[resource_type]):
@@ -222,12 +223,15 @@ def handle_resource(resource_type, resource_id):
             write_seed_files_db(output_dir, resource_type, insert_query)
 
             # Dependent resources of this one, that users can't see (document_template_asset, document_template_file)
-            for dependent_resource_type in resources_part_of.get(resource_type,[]):  #obrazek dependencies a dependent resource
+            for dependent_resource_type in resources_part_of.get(resource_type,[]):
                 dependent_resource_id_key = return_fkey_dependency(dependent_resource_type, resource_type)
-                query = generate_select_query(dependent_resource_type, dependent_resource_id_key, resource[resource_identification[resource_type]])
+                query = generate_select_query(dependent_resource_type, dependent_resource_id_key,
+                                              resource[resource_identification[resource_type]])
                 dependent_resources = db.execute_query(query)
                 for dependent_resource in dependent_resources:
                     handle_resource(dependent_resource_type, dependent_resource[resource_identification[dependent_resource_type]])
+        return
+    else:
         return
 
 
@@ -263,24 +267,24 @@ resource_dependencies = {
 resource_dependencies_keys = {
     "users": [],
     "projects": [
-        { "knowledge_models" : "package_id"},
-        { "document_templates" : "document_template_id"}
+        { "knowledge_models" : "package_id" },
+        { "document_templates" : "document_template_id" }
     ],
     "documents": [
-        { "document_templates" : "document_template_id"},
-        { "projects" : "questionnaire_uuid"}
+        { "document_templates" : "document_template_id" },
+        { "projects" : "questionnaire_uuid" }
     ],
-    "project_importers": [],
-    "knowledge_models": [
+    "project_importers" : [],
+    "knowledge_models" : [
         { "knowledge_models" : "previous_package_id"}
     ],
     "locales": [],
     "document_templates": [],
-    "document_template_asset": [
-        { "document_templates" : "document_template_id"}
+    "document_template_asset" : [
+        { "document_templates" : "document_template_id" }
     ],
-    "document_template_file": [
-        { "document_templates" : "document_template_id"}
+    "document_template_file" : [
+        { "document_templates" : "document_template_id" }
     ]
 }
 
@@ -309,7 +313,7 @@ resource_s3_objects_fileNames = {
 
 
 # Map resources to their identification attribute
-resource_identification= {
+resource_identification = {
     "users": "uuid",
     "projects": "uuid",
     "documents": "uuid",
