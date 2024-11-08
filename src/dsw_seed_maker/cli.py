@@ -63,7 +63,7 @@ def list_resources(output, resource_type):
     resources = list_logic(resource_type)
     json_output = json.dumps(resources, indent=4)
     output.write(json_output)
-    
+
 
 # just for testing the download
 # @cli.command(help='List all available seed resources', name='download')

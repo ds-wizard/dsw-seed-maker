@@ -13,12 +13,15 @@ from .comm.db import Database
 
 load_dotenv()
 
+
 def connect_to_db_logic() -> Database:
     return Database(name=os.getenv("DSW_DB_CONN_NAME"), dsn=os.getenv("DSW_DB_CONN_STR"))
+
 
 processed_resources = set()
 db = connect_to_db_logic()
 output_dir = "-"
+
 
 def example_logic(req_dto: ExampleRequestDTO) -> ExampleResponseDTO:
     return ExampleResponseDTO(
@@ -36,6 +39,7 @@ def connect_to_s3_logic() -> S3Storage:
         multi_tenant=True
     )
 
+
 def generate_insert_query(data, table):
     columns = ', '.join(data.keys())
     values = ", ".join(format_for_sql(data))
@@ -51,7 +55,7 @@ def generate_select_all_query(resource_type):
 
 
 def list_logic(resource_type: str) -> dict[str, list[dict[str, Any]]] | list[dict[str, Any]]:
-    if resource_type== "all":
+    if resource_type == "all":
         resource = {}
         for each in resource_attributes.keys():
             resource[each] = list_resource(each, resource_attributes[each])
@@ -95,6 +99,7 @@ def create_recipe_file():
     with open(os.path.join(output_dir, 'recipe.json'), 'w') as recipe:
         recipe.write(data)
 
+
 # Add a seed file (its name) to the recipe (the structure)
 def add_seed_file_to_recipe(recipe_path, db_file_name):
     with open(recipe_path, 'r') as recipe_file:
@@ -116,6 +121,7 @@ def create_seed_files_db(resource_type, output_dir):
     file = open(file_path, 'w', encoding='utf-8')
     return file
 
+
 def process_input(data, output):
     global output_dir
     output_dir = output
@@ -125,11 +131,13 @@ def process_input(data, output):
         for item in items:
             handle_resource(resource_type, item[resource_identification[resource_type]])
 
+
 def write_seed_files_db(output_dir, resource_type, query):
     with open(os.path.join(output_dir, f"add_{resource_type}.sql"), 'a', encoding='utf-8') as file:
         if file is None:
            print("File not found")
         file.write(query + "\n")
+
 
 def has_placeholder_in_s3_objects(resource_s3_objects):
     # Regular expression to match placeholders, e.g., "{some_placeholder}"
@@ -178,6 +186,7 @@ def return_fkey_dependency(resource_type, dependent_resource_type):
             return str(dependency[dependent_resource_type])
     return None
 
+
 def handle_resource(resource_type, resource_id):
     if resource_id in processed_resources:
         return
@@ -221,6 +230,7 @@ def handle_resource(resource_type, resource_id):
                     handle_resource(dependent_resource_type, dependent_resource[resource_identification[dependent_resource_type]])
         return
 
+
 # Map resources to their dependencies
 resources_part_of = {
     "users": [],
@@ -234,6 +244,7 @@ resources_part_of = {
     "document_template_file": []
 }
 
+
 # Map resources to their dependencies
 resource_dependencies = {
     "users": [],
@@ -246,6 +257,7 @@ resource_dependencies = {
     "document_template_asset": ["document_templates"],
     "document_template_file": ["document_templates"]
 }
+
 
 # Map resources to their dependencies
 resource_dependencies_keys = {
@@ -272,6 +284,7 @@ resource_dependencies_keys = {
     ]
 }
 
+
 # Map resources to their s3 objects
 resource_s3_objects = {
     "users": "",
@@ -285,6 +298,7 @@ resource_s3_objects = {
     "document_template_file": ""
 }
 
+
 # Map resources to their s3 objects' file names
 resource_s3_objects_fileNames = {
     "locales": "name",
@@ -292,6 +306,7 @@ resource_s3_objects_fileNames = {
     "document_template_asset": ["templates/"],
     "document_template_file": ["templates/"]
 }
+
 
 # Map resources to their identification attribute
 resource_identification= {
@@ -306,6 +321,7 @@ resource_identification= {
     "document_template_file": "uuid"
 }
 
+
 # Map resources to their table names
 resource_tables = {
     "users": "user_entity",
@@ -318,6 +334,7 @@ resource_tables = {
     "document_template_asset": "document_template_asset",
     "document_template_file": "document_template_file"
 }
+
 
 # Map resources to attributes visible to users
 resource_attributes = {
