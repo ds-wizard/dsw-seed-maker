@@ -59,18 +59,9 @@ def example():
                    ' locales, document_templates, projects, documents)')
 def list_resources(output, resource_type):
     Config.check()
-    # TODO: Implement list command (do it in logic, import & use here)
     resources = list_logic(resource_type)
     json_output = json.dumps(resources, indent=4)
     output.write(json_output)
-
-
-# just for testing the download
-# @cli.command(help='List all available seed resources', name='download')
-# def download_resources():
-#    Config.check()
-#    # TODO: Implement list command (do it in logic, import & use here)
-#    download_file_logic("documents/1034a4b0-d867-4b4b-b2a0-a3956b43cf95", "test.pdf")
 
 
 @cli.command(help='Create a seed package from input', name='make-seed')
@@ -83,7 +74,4 @@ def list_resources(output, resource_type):
 def make_seed(input_fp, output_dir):
     Config.check()
     data = json.load(input_fp)
-    out_dir = pathlib.Path(output_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
-    # TODO: Implement list command (do it in logic, import & use here)
-    process_input(data, output_dir)
+    process_input(data, pathlib.Path(output_dir))

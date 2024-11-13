@@ -17,16 +17,18 @@ else:
 
 
 class Config:
-    API_ROOT_PATH = os.getenv('API_ROOT_PATH', '')
-    DSW_DB_CONN_STR = os.getenv('DSW_DB_CONN_STR')
-    DSW_S3_URL = os.getenv('DSW_S3_URL')
-    DSW_S3_USERNAME = os.getenv('DSW_S3_USERNAME')
-    DSW_S3_PASSWORD = os.getenv('DSW_S3_PASSWORD')
-    DSW_S3_BUCKET = os.getenv('DSW_S3_BUCKET')
-    DSW_S3_REGION = os.getenv('DSW_S3_REGION', 'eu-central-1')
+    API_ROOT_PATH: str = os.getenv('API_ROOT_PATH', '')
+    DSW_DB_CONN_STR: str = os.getenv('DSW_DB_CONN_STR', '')
+    DSW_S3_URL: str = os.getenv('DSW_S3_URL', '')
+    DSW_S3_USERNAME: str = os.getenv('DSW_S3_USERNAME', '')
+    DSW_S3_PASSWORD: str = os.getenv('DSW_S3_PASSWORD', '')
+    DSW_S3_BUCKET: str = os.getenv('DSW_S3_BUCKET', '')
+    DSW_S3_REGION: str = os.getenv('DSW_S3_REGION', 'eu-central-1')
 
-    LOG_LEVEL = os.getenv('LOG_LEVEL', DEFAULT_LOG_LEVEL)
-    LOG_FORMAT = os.getenv('LOG_FORMAT', DEFAULT_LOG_FORMAT)
+    OUT_DIR: pathlib.Path = pathlib.Path.cwd() / 'out'
+
+    LOG_LEVEL: str = os.getenv('LOG_LEVEL', DEFAULT_LOG_LEVEL)
+    LOG_FORMAT: str = os.getenv('LOG_FORMAT', DEFAULT_LOG_FORMAT)
 
     @classmethod
     def check(cls):
@@ -48,3 +50,7 @@ class Config:
             format=cls.LOG_FORMAT,
         )
         LOG.debug('Logging configured with level: %s', cls.LOG_LEVEL)
+
+    @classmethod
+    def ensure_out_dir(cls):
+        cls.OUT_DIR.mkdir(parents=True, exist_ok=True)
