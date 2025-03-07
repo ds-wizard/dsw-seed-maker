@@ -63,7 +63,7 @@ def list_resources(output, resource_type):
     resources = list_logic(resource_type)
     json_output = json.dumps(resources, indent=4)
     output.write(json_output)
-    
+
 
 # just for testing the download
 # @cli.command(help='List all available seed resources', name='download')
@@ -86,5 +86,4 @@ def make_seed(input_fp, output_dir):
     out_dir = pathlib.Path(output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     # TODO: Implement list command (do it in logic, import & use here)
-    print(data)
     process_input(data, output_dir)

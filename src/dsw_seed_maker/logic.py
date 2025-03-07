@@ -1,14 +1,11 @@
 import json
 import os
+import re
 import uuid
 from datetime import datetime
-from operator import index
-from venv import create
-
 from dotenv import load_dotenv
 import pathlib
 from typing import Any
-from psycopg import sql
 
 from .comm import S3Storage
 from .models import ExampleRequestDTO, ExampleResponseDTO
@@ -17,14 +14,19 @@ from .comm.db import Database
 load_dotenv()
 
 
+def connect_to_db_logic() -> Database:
+    return Database(name=os.getenv("DSW_DB_CONN_NAME"), dsn=os.getenv("DSW_DB_CONN_STR"))
+
+
+processed_resources = set()
+db = connect_to_db_logic()
+output_dir = "-"
+
+
 def example_logic(req_dto: ExampleRequestDTO) -> ExampleResponseDTO:
     return ExampleResponseDTO(
         message=req_dto.message.replace('server', 'client'),
     )
-
-
-def connect_to_db_logic() -> Database:
-    return Database(name=os.getenv("DSW_DB_CONN_NAME"), dsn=os.getenv("DSW_DB_CONN_STR"))
 
 
 def connect_to_s3_logic() -> S3Storage:
@@ -38,162 +40,59 @@ def connect_to_s3_logic() -> S3Storage:
     )
 
 
+def generate_insert_query(data, table):
+    columns = ', '.join(data.keys())
+    values = ", ".join(format_for_sql(data))
+    return f"INSERT INTO {table} ({columns}) VALUES ({values})\;"
+
+
+def generate_select_query(resource_type, attr, value):
+    return "SELECT * FROM {table} WHERE {attr} = '{value}'".format(value=value, table=resource_tables[resource_type], attr=attr)
+
+
+def generate_select_all_query(resource_type):
+    return "SELECT * FROM {table}".format(table=resource_tables[resource_type])
+
+
 def list_logic(resource_type: str) -> dict[str, list[dict[str, Any]]] | list[dict[str, Any]]:
-    db = connect_to_db_logic()
-    if resource_type == 'all':
-        return list_all_logic(db)
-    if resource_type == 'users':
-        return {'users': list_users_logic(db)}
-    if resource_type == 'project_importers':
-        return {'project_importers': list_project_importers_logic(db)}
-    if resource_type == 'knowledge_models':
-        return {'knowledge_models': list_knowledge_models_logic(db)}
-    if resource_type == 'locales':
-        return {'locales': list_locales_logic(db)}
-    if resource_type == 'document_templates':
-        return {'document_templates': list_document_templates_logic(db)}
-    if resource_type == 'projects':
-        return {'projects': list_projects_logic(db)}
-    if resource_type == 'documents':
-        return {'documents': list_documents_logic(db)}
-
-    raise ValueError(f'Invalid resource type: {resource_type}')
+    if resource_type == "all":
+        resource = {}
+        for each in resource_attributes.keys():
+            resource[each] = list_resource(each, resource_attributes[each])
+        return resource
+    else:
+        return {resource_type: list_resource(resource_type, resource_attributes[resource_type])}
 
 
-def list_all_logic(db) -> dict[str, list[dict[str, str | Any]] | list[dict[str, Any]]]:
-    users = list_users_logic(db)
-    project_importers = list_project_importers_logic(db)
-    knowledge_models = list_knowledge_models_logic(db)
-    locales = list_locales_logic(db)
-    document_templates = list_document_templates_logic(db)
-    projects = list_projects_logic(db)
-    documents = list_documents_logic(db)
-    resources = {
-        'users': users,
-        'project_importers': project_importers,
-        'knowledge_models': knowledge_models,
-        'locales': locales,
-        'document_templates': document_templates,
-        'projects': projects,
-        'documents': documents
-    }
-    return resources
-
-
-def list_users_logic(db) -> list[dict[str, str | Any]]:
-    query = sql.SQL('SELECT * FROM user_entity')
+def list_resource(resource_type, attributes):
+    query = generate_select_all_query(resource_type)
     resources = db.execute_query(query)
     parsed_resources = [
         {
-            'uuid': str(row['uuid']),  # Convert UUID to string
-            'first_name': row['first_name'],
-            'last_name': row['last_name'],
-            'role': row['role']
+            attr: str(row[attr]) if attr == 'uuid' else row[attr]  # Convert 'uuid' to string; others as-is
+            for attr in attributes if attr in row
         }
         for row in resources
     ]
+
     return parsed_resources
 
 
-def list_project_importers_logic(db) -> list[dict[str, Any]]:
-    query = sql.SQL('SELECT * FROM questionnaire_importer')
-    resources = db.execute_query(query)
-    parsed_resources: list[dict[str, Any]] = [
-        {
-            'id': row['id'],  # Convert UUID to string
-            'name': row['name'],
-            'description': row['description']
-        }
-        for row in resources
-    ]
-    return parsed_resources
-
-
-def list_knowledge_models_logic(db) -> list[dict[str, Any]]:
-    query = sql.SQL('SELECT * FROM package')
-    resources = db.execute_query(query)
-    parsed_resources = [
-        {
-            'id': row['id'],
-            'name': row['name'],
-            'km_id': row['km_id'],
-            'description': row['description']
-        }
-        for row in resources
-    ]
-    return parsed_resources
-
-
-def list_locales_logic(db) -> list[dict[str, Any]]:
-    query = sql.SQL('SELECT * FROM locale')
-    resources = db.execute_query(query)
-    parsed_resources = [
-        {
-            'id': row['id'],
-            'name': row['name'],
-            'code': row['code'],
-            'description': row['description']
-        }
-        for row in resources
-    ]
-    return parsed_resources
-
-
-def list_document_templates_logic(db) -> list[dict[str, Any]]:
-    query = sql.SQL('SELECT * FROM document_template')
-    resources = db.execute_query(query)
-    parsed_resources = [
-        {
-            'id': row['id'],
-            'name': row['name'],
-            'template_id': row['template_id']
-        }
-        for row in resources
-    ]
-    return parsed_resources
-
-
-def list_projects_logic(db) -> list[dict[str, Any]]:
-    query = sql.SQL('SELECT * FROM questionnaire')
-    resources = db.execute_query(query)
-    parsed_resources = [
-        {
-            'uuid': str(row['uuid']),  # Convert UUID to string
-            'name': row['name']
-        }
-        for row in resources
-    ]
-    return parsed_resources
-
-
-def list_documents_logic(db) -> list[dict[str, Any]]:
-    query = sql.SQL('SELECT * FROM document')
-    resources = db.execute_query(query)
-    parsed_resources = [
-        {
-            'uuid': str(row['uuid']),  # Convert UUID to string
-            'name': row['name']
-        }
-        for row in resources
-    ]
-    return parsed_resources
-
-
-def download_file_logic(file_name: str, target_path: str) -> bool:
+def download_file_s3(s3_path: str) -> bool:
     s3 = connect_to_s3_logic()
     s3.ensure_bucket()
-    target_path = pathlib.Path(target_path)
-    downloaded_file = s3.download_file(file_name, target_path)
+    target_path = str(output_dir + "/app/" + s3_path).replace(":", "_")
+    target = pathlib.Path(target_path)
+    downloaded_file = s3.download_file(s3_path, target)
 
     if downloaded_file:
-        print(f"File '{file_name}' downloaded to '{target_path}'.")
+        return downloaded_file
     else:
-        print(f"File '{file_name}' not found in bucket '{s3.bucket}'.")
+      print(f"File '{s3_path}' not found in bucket.")
 
-    return downloaded_file
 
 # Create a copy of tmp.js to output_dir
-def create_recipe_file(output_dir):
+def create_recipe_file():
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     with open("recipe_tmp.json", 'r') as template_recipe:
@@ -201,32 +100,58 @@ def create_recipe_file(output_dir):
     with open(os.path.join(output_dir, 'recipe.json'), 'w') as recipe:
         recipe.write(data)
 
-def add_db_file_to_recipe(recipe_path, db_file_name):
+
+# Add a seed file (its name) to the recipe (the structure)
+def add_seed_file_to_recipe(recipe_path, db_file_name):
     with open(recipe_path, 'r') as recipe_file:
         recipe_data = json.load(recipe_file)
 
-        recipe_data["db"]["scripts"].append({"filename" : db_file_name})
+        if not any(script.get("filename") == db_file_name for script in recipe_data["db"]["scripts"]):
+            # If not, append it to the scripts list
+            recipe_data["db"]["scripts"].append({"filename": db_file_name})
 
     with open(recipe_path, 'w') as recipe_file:
-        #recipe_file.write(str(recipe_data))
         json.dump(recipe_data, recipe_file, ensure_ascii=False, indent=4)
 
 
-def process_input(data, output_dir):
-    db = connect_to_db_logic()
-    create_recipe_file(output_dir)
+def create_seed_files_db(resource_type, output_dir):
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    file_path = os.path.join(output_dir, f"add_{resource_type}.sql")
+    file = open(file_path, 'w', encoding='utf-8')
+    return file
+
+
+def process_input(data, output):
+    global output_dir
+    output_dir = output
+    create_recipe_file()
     for resource_type, items in data.items():
-        handler = resource_handlers.get(resource_type)
-        recipe_file = create_seed_files_db(resource_type, output_dir)
-        add_db_file_to_recipe(output_dir + "/recipe.json", "add_" + resource_type + ".sql")
-        if handler:
-            # Call the handler for each item in the list associated with this resource type
-            for item in items:
-                handler(next(iter(item.values()), None), db, recipe_file, resource_type, output_dir)
-        else:
-            print(f"Unrecognized resource type: {resource_type}")
+        create_seed_files_db(resource_type, output_dir)
+        for item in items:
+            handle_resource(resource_type, item[resource_identification[resource_type]])
 
 
+def write_seed_files_db(output_dir, resource_type, query):
+    with open(os.path.join(output_dir, f"add_{resource_type}.sql"), 'a', encoding='utf-8') as file:
+        if file is None:
+           print("File not found")
+        file.write(query + "\n")
+
+
+def has_placeholder_in_s3_objects(resource_s3_objects):
+    # Regular expression to match placeholders, e.g., "{some_placeholder}"
+    placeholder_pattern = re.compile(r"{placeholder}")
+
+    # Check if the input is a single string
+    if placeholder_pattern.search(resource_s3_objects):
+        return True
+
+    return False
+
+
+# TODO needs help a lot
 def format_for_sql(data_dict):
     sql_values = []
     for key, value in data_dict.items():
@@ -257,141 +182,148 @@ def format_for_sql(data_dict):
     return sql_values
 
 
-def create_seed_files_db(resource_type, output_dir):
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-
-    file_path = os.path.join(output_dir, f"add_{resource_type}.sql")
-    file = open(file_path, 'w', encoding='utf-8')
-    return file
-
-def write_seed_files_db(file, query):
-    file.write(query + "\n")
-    
-    
-def generate_insert_query(data, table):
-    columns = ', '.join(data.keys())
-    values = ", ".join(format_for_sql(data))
-    return f"INSERT INTO {table} ({columns}) VALUES ({values});"
-
-def generate_select_query(resource_type, attr, value):
-    return "SELECT * FROM {table} WHERE {attr} = '{value}'".format(value=value, table=resource_tables[resource_type], attr=attr)
+def return_fkey_dependency(resource_type, dependent_resource_type):
+    for dependency in resource_dependencies_keys.get(resource_type, []):
+        if dependent_resource_type in dependency.keys():
+            return str(dependency[dependent_resource_type])
+    return None
 
 
-def handle_users(resource_id, db, recipe_file, resource_type, output_dir):
-    query = generate_select_query(resource_type, "uuid", resource_id)
-    resource = db.execute_query(query)
-    if len(resource) == 1:
-        insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
-        write_seed_files_db(recipe_file, insert_query)
+def handle_resource(resource_type, resource_id):
+    if resource_id not in processed_resources:
+        processed_resources.add(resource_id)
+        query = generate_select_query(resource_type, resource_identification[resource_type], resource_id)
+        resources = db.execute_query(query)
+
+        for resource in resources:
+            # Dependencies
+            for dependency in resource_dependencies.get(resource_type, []):
+                dep_type = dependency
+                dep_id_key = return_fkey_dependency(resource_type, dep_type)
+                if dep_id_key in resource:
+                    dep_id = resource[dep_id_key]
+                    handle_resource(dep_type, dep_id)
+
+            # S3 objects
+            if resource_id != 'wizard:default:1.0.0' and resource_s3_objects[resource_type] != "":
+                s3_object = resource_s3_objects[resource_type]
+                # If the S3 object contains a placeholder, replace it with the dependent resource's value
+                if has_placeholder_in_s3_objects(resource_s3_objects[resource_type]):
+                    dependent_key = return_fkey_dependency(resource_type, resource_dependencies[resource_type][0])
+                    dependent_value = resource.get(dependent_key)
+                    s3_object = s3_object.format(placeholder=dependent_value)
+                    download_file_s3(s3_object + str(resource_id))
+
+                else:
+                    download_file_s3(s3_object + str(resource_id))
+
+            add_seed_file_to_recipe(output_dir + "/recipe.json", "add_" + resource_type + ".sql")
+            insert_query = generate_insert_query(resource, resource_tables[resource_type])
+            write_seed_files_db(output_dir, resource_type, insert_query)
+
+            # Dependent resources of this one, that users can't see (document_template_asset, document_template_file)
+            for dependent_resource_type in resources_part_of.get(resource_type, []):
+                dependent_resource_id_key = return_fkey_dependency(dependent_resource_type, resource_type)
+                query = generate_select_query(dependent_resource_type, dependent_resource_id_key,
+                                              resource[resource_identification[resource_type]])
+                dependent_resources = db.execute_query(query)
+                for dependent_resource in dependent_resources:
+                    handle_resource(dependent_resource_type, dependent_resource[resource_identification[dependent_resource_type]])
+        return
     else:
-        print("User not found in database")
-
-def handle_projects(resource_id, db, recipe_file, resource_type, output_dir):
-    query = generate_select_query(resource_type, "uuid", resource_id )
-    resource = db.execute_query(query)
-    if len(resource) == 1:
-        insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
-        write_seed_files_db(recipe_file, insert_query)
-        handle_knowledge_models(resource[0]['package_id'], db, recipe_file, "knowledge_models", output_dir)
-        handle_document_templates(resource[0]['document_template_id'], db, recipe_file, "document_templates", output_dir)
-    else:
-        print("Project not found in database")
-
-def handle_documents(resource_id, db, recipe_file, resource_type, output_dir):
-    query = generate_select_query(resource_type, "uuid", resource_id)
-    resource = db.execute_query(query)
-    if len(resource) == 1:
-        insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
-        write_seed_files_db(recipe_file, insert_query)
-        handle_document_templates(resource[0]['document_template_id'], db, recipe_file, "document_templates", output_dir)
-        handle_projects(resource[0]['questionnaire_uuid'], db, recipe_file, "projects", output_dir)
-    else:
-        print("Document not found in database")
-
-def handle_project_importers(resource_id, db, recipe_file, resource_type, output_dir):
-    query = generate_select_query(resource_type, "id", resource_id)
-    resource = db.execute_query(query)
-    if len(resource) == 1:
-        insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
-        write_seed_files_db(recipe_file, insert_query)
-    else:
-        print("Project Importer not found in database")
+        return
 
 
-def handle_knowledge_models(resource_id, db, recipe_file, resource_type, output_dir):
-    query = generate_select_query(resource_type, "id", resource_id)
-    resource = db.execute_query(query)
-    if len(resource) == 1:
-        if resource[0]['previous_package_id'] is None:
-            insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
-            write_seed_files_db(recipe_file, insert_query)
-        else:
-            # print("\n PRINT THE previous package id \n")
-            # print(resource[0]['previous_package_id'])
-            handle_knowledge_models(resource[0]['previous_package_id'], db, recipe_file, resource_type, output_dir)
-            insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
-            write_seed_files_db(recipe_file, insert_query)
-    else:
-        print("User not found in database")
-
-def handle_locales(resource_id, db, recipe_file, resource_type,  output_dir):
-    if resource_id != 'wizard:default:1.0.0':
-        query = generate_select_query(resource_type, "id", resource_id )
-        resource = db.execute_query(query)
-        if len(resource) == 1:
-            insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
-            write_seed_files_db(recipe_file, insert_query)
-            s3_locales = download_file_logic("locales/" + resource_id, output_dir + "/app" + "/locales/" + resource[0]['name'])
-            if s3_locales:
-                print("File downloaded")
-            else:
-                print("File not found")
-        else:
-            print("User not found in database")
-
-def handle_document_templates(resource_id, db, recipe_file, resource_type, output_dir):
-    query = generate_select_query(resource_type, "id" , resource_id )
-    resource = db.execute_query(query)
-    if len(resource) == 1:
-        insert_query = generate_insert_query(resource[0], resource_tables[resource_type])
-        write_seed_files_db(recipe_file, insert_query)
-        handle_document_templates_files(resource_id, db, recipe_file)
-        handle_document_templates_assets(resource_id, db, recipe_file, output_dir)
-    else:
-        print("User not found in database")
-
-def handle_document_templates_assets(doc_temp_id, db, recipe_file, output_dir):
-    query = generate_select_query("document_template_asset", "document_template_id", doc_temp_id)
-    resource = db.execute_query(query)
-    for asset in resource:
-        insert_query = generate_insert_query(asset, "document_template_asset")
-        write_seed_files_db(recipe_file, insert_query)
-        s3_assets = download_file_logic("templates/" + str(doc_temp_id) + "/" + str(asset['uuid']), output_dir + "/app" + "/document_templates/" + str(doc_temp_id).replace(":", "_") + "/asset_" + str(asset['uuid']) )
-        if s3_assets:
-            print("File downloaded")
-        else:
-            print("File not found")
-
-
-def handle_document_templates_files(doc_temp_id, db, recipe_file):
-    query = generate_select_query("document_template_file", "document_template_id", doc_temp_id)
-    resource = db.execute_query(query)
-    for file in resource:
-        insert_query = generate_insert_query(file, "document_template_file")
-        write_seed_files_db(recipe_file, insert_query)
-
-
-# Map resource types to handler functions
-resource_handlers = {
-    "users": handle_users,
-    "projects": handle_projects,
-    "documents": handle_documents,
-    "project_importers": handle_project_importers,
-    "knowledge_models": handle_knowledge_models,
-    "locales":handle_locales,
-    "document_templates": handle_document_templates,
+# Map resources to their dependencies
+resources_part_of = {
+    "users": [],
+    "projects": [],
+    "documents": [],
+    "project_importers": [],
+    "knowledge_models": [],
+    "locales": [],
+    "document_templates": ["document_template_asset", "document_template_file"],
+    "document_template_asset": [],
+    "document_template_file": []
 }
+
+
+# Map resources to their dependencies
+resource_dependencies = {
+    "users": [],
+    "projects": ["knowledge_models", "document_templates"],
+    "documents": ["document_templates", "projects"],
+    "project_importers": [],
+    "knowledge_models": ["knowledge_models"],
+    "locales": [],
+    "document_templates": [],
+    "document_template_asset": ["document_templates"],
+    "document_template_file": ["document_templates"]
+}
+
+
+# Map resources to their dependencies
+resource_dependencies_keys = {
+    "users": [],
+    "projects": [
+        {"knowledge_models": "package_id"},
+        {"document_templates": "document_template_id"}
+    ],
+    "documents": [
+        {"document_templates": "document_template_id"},
+        {"projects": "questionnaire_uuid"}
+    ],
+    "project_importers" : [],
+    "knowledge_models" : [
+        {"knowledge_models": "previous_package_id"}
+    ],
+    "locales": [],
+    "document_templates": [],
+    "document_template_asset" : [
+        {"document_templates": "document_template_id"}
+    ],
+    "document_template_file" : [
+        {"document_templates": "document_template_id"}
+    ]
+}
+
+
+# Map resources to their s3 objects
+resource_s3_objects = {
+    "users": "",
+    "projects": "",
+    "documents": "documents/",
+    "project_importers": "",
+    "knowledge_models": "",
+    "locales": "locales/",
+    "document_templates": "",
+    "document_template_asset": "templates/{placeholder}/",
+    "document_template_file": ""
+}
+
+
+# Map resources to their s3 objects' file names
+resource_s3_objects_fileNames = {
+    "locales": "name",
+    "document_templates": [],
+    "document_template_asset": ["templates/"],
+    "document_template_file": ["templates/"]
+}
+
+
+# Map resources to their identification attribute
+resource_identification = {
+    "users": "uuid",
+    "projects": "uuid",
+    "documents": "uuid",
+    "project_importers": "id",
+    "knowledge_models": "id",
+    "locales": "id",
+    "document_templates": "id",
+    "document_template_asset": "uuid",
+    "document_template_file": "uuid"
+}
+
 
 # Map resources to their table names
 resource_tables = {
@@ -404,4 +336,18 @@ resource_tables = {
     "document_templates": "document_template",
     "document_template_asset": "document_template_asset",
     "document_template_file": "document_template_file"
+}
+
+
+# Map resources to attributes visible to users
+resource_attributes = {
+    "users": ['uuid', 'first_name', 'last_name', 'role', 'email'],
+    "projects": ['uuid', 'name'],
+    "documents": ['uuid', 'name'],
+    "project_importers": ['id', 'name', 'description'],
+    "knowledge_models": ['id', 'name', 'km_id', 'description'],
+    "locales": ['id', 'name', 'code', 'description'],
+    "document_templates": ['id', 'name', 'template_id'],
+    "document_template_asset": ['uuid', 'document_template_id'],
+    "document_template_file": ['uuid', 'document_template_id']
 }
