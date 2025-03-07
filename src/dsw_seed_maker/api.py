@@ -1,4 +1,5 @@
 import contextlib
+import json
 import logging
 import pathlib
 
@@ -10,7 +11,7 @@ import fastapi.templating
 from .config import Config
 from .consts import NICE_NAME, VERSION
 from .models import ExampleRequestDTO, ExampleResponseDTO
-from .logic import example_logic, list_logic
+from .logic import example_logic, list_logic, process_input
 
 LOG = logging.getLogger('uvicorn.error')
 ROOT = pathlib.Path(__file__).parent
@@ -140,6 +141,21 @@ async def get_documents():
     except Exception as e:
         LOG.error('Error fetching documents: %s', str(e))
         raise fastapi.HTTPException(status_code=500, detail='Could not fetch documents')
+
+
+router = fastapi.APIRouter()
+
+@router.post("/api/process")
+async def process_data(data: dict):
+    try:
+        input_data = json.loads(data["data"])
+        output_dir = "output"
+        process_input(input_data, output_dir)
+        return fastapi.responses.JSONResponse(content={"status": "success", "message": "Processing completed successfully"})
+    except Exception as e:
+        return fastapi.responses.JSONResponse(status_code=400, content={"status": "error", "message": str(e)})
+
+app.include_router(router)
 
 
 @app.post('/api/seed-package', response_class=fastapi.responses.JSONResponse)
